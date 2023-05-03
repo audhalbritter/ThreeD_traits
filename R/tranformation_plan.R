@@ -132,19 +132,4 @@ tranformation_plan <- list(
   )
 
 
-  # # trait coverage
-  # tar_target(
-  #   name = trait_coverage,
-  #   command = fortify(trait_impute) |>
-  #     ungroup() |>
-  #     #filter(Trait == "CN_ratio") |>
-  #     complete(.id, level, trait_trans, fill = list(s = 0)) |>
-  #     filter(level == "PlotID") |>
-  #     group_by(Gradient, trait_trans) |>
-  #     # prob = 0.25 gives 75% of the plots
-  #     # also run prob = 0.5 for 50% of the plots
-  #     summarise(q = quantile(s, prob = 0.25))
-  #
-  # )
-
 )
