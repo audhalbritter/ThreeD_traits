@@ -20,7 +20,7 @@ make_trait_impute <- function(community, traits){
                           value_col = "value_trans",
                           abundance_col = "cover",
                           treatment_col = c("treatment"),
-                          treatment_level = c("blockID"),
+                          treatment_level = c("siteID"),
                           other_col = c("origSiteID", "origBlockID", "destSiteID", "destBlockID", "Nlevel", "warming", "grazing", "Namount_kg_ha_y"),
                           min_n_in_sample = 2)
 
