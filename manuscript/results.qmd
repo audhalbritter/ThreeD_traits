@@ -1,0 +1,43 @@
+---
+title: "PFTC6 3D traits paper - Results"
+format: html
+editor: visual
+---
+
+## Results
+
+
+## Supporting Information
+
+### Trait correlations
+
+The trait correlation is high between the size traits (area, height and dry mass).
+
+```{r}
+#| label: trait-correlation
+#| echo: false
+#| fig-cap: Correlations between traits.
+
+tar_load(trait_correlation_plot)
+
+trait_correlation_plot
+
+```
+
+
+
+### Trait coverage
+
+The trait correlation is high between the size traits (area, height and dry mass).
+
+```{r}
+#| label: trait-coverage
+#| echo: false
+#| fig-cap: The proportions of the level traits were imputed from before the bootstrapping procedure; plot (blue), block (green), site (orange) or global (red).
+
+tar_load(imputation_plot)
+
+imputation_plot
+
+```
+
