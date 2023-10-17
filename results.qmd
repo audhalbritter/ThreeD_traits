@@ -4,8 +4,40 @@ format: html
 editor: visual
 ---
 
+```{r}
+#| label: set-up
+#| echo: false
+
+library(targets)
+library(tarchetypes)
+library(ggplot2)
+library(ggcorrplot)
+
+```
+
 ## Results
 
+```{r}
+#| label: trait-mean-alpine
+#| echo: false
+#| fig-cap: Traits in the alpine
+
+tar_load(trait_figure_alpine)
+
+trait_figure_alpine
+
+```
+
+```{r}
+#| label: trait-mean-sub-alpine
+#| echo: false
+#| fig-cap: Traits in the alpine
+
+tar_load(trait_figure_subalpine)
+
+trait_figure_subalpine
+
+```
 
 ## Supporting Information
 
@@ -16,6 +48,7 @@ The trait correlation is high between the size traits (area, height and dry mass
 ```{r}
 #| label: trait-correlation
 #| echo: false
+#| eval: false
 #| fig-cap: Correlations between traits.
 
 tar_load(trait_correlation_plot)
@@ -24,14 +57,12 @@ trait_correlation_plot
 
 ```
 
-
-
 ### Trait coverage
 
 The trait correlation is high between the size traits (area, height and dry mass).
 
 ```{r}
-#| label: trait-coverage
+#| label: trait-imputation
 #| echo: false
 #| fig-cap: The proportions of the level traits were imputed from before the bootstrapping procedure; plot (blue), block (green), site (orange) or global (red).
 
