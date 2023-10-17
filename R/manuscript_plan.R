@@ -24,7 +24,7 @@ manuscript_plan <- list(
 
   # Results
   tar_render(name = results,
-             path = "manuscript/results.qmd")
+             path = "results.qmd")
 
 
 )

@@ -28,18 +28,18 @@ si_plan <- list(
 
   # CHECK TRAIT IMPUTATION COVERAGE
   # trait coverage plot (check how much of the community has been sampled)
-  tar_target(
-    name = trait_coverage,
-    command = fortify(trait_impute) |>
-      ungroup() |>
-      complete(.id, level, trait_trans, fill = list(s = 0)) |>
-      filter(level == "turfID") |>
-      group_by(siteID, treatment_comm, trait_trans) |>
-      # prob = 0.25 gives 75% of the plots
-      # also run prob = 0.5 for 50% of the plots
-      summarise(q = quantile(s, prob = 0.25))
-
-  ),
+  # tar_target(
+  #   name = trait_coverage,
+  #   command = fortify(trait_impute) |>
+  #     ungroup() |>
+  #     complete(.id, level, trait_trans, fill = list(s = 0)) |>
+  #     filter(level == "turfID") |>
+  #     group_by(siteID, treatment_comm, trait_trans) |>
+  #     # prob = 0.25 gives 75% of the plots
+  #     # also run prob = 0.5 for 50% of the plots
+  #     summarise(q = quantile(s, prob = 0.25))
+  #
+  # ),
 
   # trait imputation plot
   tar_target(
