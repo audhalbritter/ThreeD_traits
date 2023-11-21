@@ -12,14 +12,14 @@ download_plan <- list(
   ),
 
   # traits
-  # tar_target(
-  #   name = trait_download,
-  #   command =  get_file(node = "pn6g3",
-  #                       file = "PFTC6_clean_leaf_traits_2022.csv",
-  #                       path = "data",
-  #                       remote_path = "trait_data"),
-  #   format = "file"
-  # ),
+  tar_target(
+    name = trait_download,
+    command =  get_file(node = "fcbw4",
+                        file = "PFTC6_ThreeD_clean_leaf_traits_2022.csv",
+                        path = "data",
+                        remote_path = "trait_data"),
+    format = "file"
+  ),
 
   # meta data
   tar_target(
@@ -43,7 +43,7 @@ download_plan <- list(
   tar_target(
     name = trait_raw,
     #command = read_csv(trait_download)
-    command = read_csv(file = "data/PFTC6_clean_leaf_traits_2022.csv")
+    command = read_csv(file = "data/PFTC6_ThreeD_clean_leaf_traits_2022.csv")
   )
 
 )

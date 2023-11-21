@@ -25,9 +25,6 @@ clean_community <- function(cover_raw, metaTurfID, sp_list){
            !species %in% c("Carex rupestris", "Carex rupestris cf",
                            "Carex norvegica cf", "Carex sp")) |>
 
-    # add Namount variable
-    left_join(metaTurfID  |>
-                distinct(Nlevel, Namount_kg_ha_y), by = "Nlevel")  |>
     # log transform Nitrogen
     mutate(Nitrogen_log = log(Namount_kg_ha_y + 1)) |>
 
@@ -72,18 +69,35 @@ clean_community <- function(cover_raw, metaTurfID, sp_list){
 clean_traits <- function(trait_raw){
 
   trait_raw |>
-    # remove incline data
-    filter(!project %in% c("Incline"),
-           # remove gradient plots
-           !siteID == "Hogsete",
+    # remove gradient plots
+    filter(!siteID == "Hogsete",
            !(siteID == "Vikesland" & warming == "A")) |>
-    select(-project, -gradient) |>
+    select(-gradient) |>
 
     # remove missing treatment (3 leaves)
     filter(!is.na(grazing)) |>
 
     # remove wet mass, correlated with dry mass
     filter(trait != "wet_mass_g") |>
+    # log transform size traits
+    mutate(
+      value_trans = if_else(
+        trait %in% c(
+          "plant_height_cm",
+          "dry_mass_g",
+          "leaf_area_cm2",
+          "leaf_thickness_mm"
+        ),
+        true = suppressWarnings(log(value)),# suppress warnings from log(-value) in isotopes (these are calculated but not kept)
+        false = value
+      ),
+      trait_trans = recode(
+        trait,
+        "plant_height_cm" = "plant_height_cm_log",
+        "dry_mass_g" = "dry_mass_g_log",
+        "leaf_area_cm2" = "leaf_area_cm2_log",
+        "leaf_thickness_mm" = "leaf_thickness_mm_log"
+      )) |>
     # order traits
     mutate(trait_trans = factor(trait_trans, levels = c("plant_height_log_cm", "dry_mass_g_log", "leaf_area_log_cm2", "leaf_thickness_log_mm", "ldmc", "sla_cm2_g"))) |>
 
