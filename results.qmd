@@ -1,7 +1,10 @@
 ---
-title: "PFTC6 3D traits paper - Results"
+title: "Trait responses to global change"
 format: html
 editor: visual
+execute:
+  warnings: false
+  messages: false
 ---
 
 ```{r}
@@ -12,30 +15,169 @@ library(targets)
 library(tarchetypes)
 library(ggplot2)
 library(ggcorrplot)
+library(gt)
+library(gtExtras)
 
 ```
 
-## Results
+## Methods
+
+Run models without 3-way interaction and log-transform nitrogen addition.
+
+### Warming x nitrogen addition
+
+**log**: lm(trait \~ warming \* log(nitrogen) + warming \* origSiteID + log(nitrogen) \* origSiteID, data)
+
+### Warming x grazing
+
+**linear**: lm(trait \~ warming \* grazing + warming \* origSiteID + grazing \* origSiteID, data)
+
+# Results
+
+### Warming x Nitrogen
 
 ```{r}
-#| label: trait-mean-alpine
+#| label: tbl-single-traits
 #| echo: false
-#| fig-cap: Traits in the alpine
+#| fig-cap: Model output from single trait models
 
-tar_load(trait_figure_alpine)
+tar_load(n_trait_anova)
 
-trait_figure_alpine
+t <- n_trait_anova |> 
+  mutate(sumsq = round(sumsq, 2),
+         df = round(df, 2),
+         statistic = round(statistic, 2),
+         p.value = round(p.value, 3)) |> 
+  rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value")
+
+tab1 <- t |> 
+  filter(Traits %in% c("Height~(cm)", "Dry~mass~(g)", "Area~(cm^2)")) |> 
+  group_by(Traits) |> 
+  gt() |> 
+  tab_options(
+  table.font.size = 12,
+  data_row.padding = gt::px(1)
+  ) |> 
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(Term, "Sum of Square", df, "F", P),
+      rows = P <= 0.05
+    )
+  ) |> 
+  cols_align(
+  align = c("left"),
+  columns = Term
+)
+  
+tab2 <- t |> 
+  filter(!Traits %in% c("Height~(cm)", "Dry~mass~(g)", "Area~(cm^2)")) |> 
+  group_by(Traits) |> 
+  gt() |> 
+  tab_options(
+  table.font.size = 12,
+  data_row.padding = gt::px(1)
+  ) |> 
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(Term, "Sum of Square", df, "F", P),
+      rows = P <= 0.05
+    )
+  )  |> 
+  cols_align(
+  align = c("left"),
+  columns = Term
+)
+
+listed_tables <- list(tab1, tab2)
+
+gt_two_column_layout(listed_tables)
+  
+  
 
 ```
 
 ```{r}
-#| label: trait-mean-sub-alpine
+#| label: fig-single-traits
 #| echo: false
-#| fig-cap: Traits in the alpine
+#| warnings: false
+#| message: false
+#| fig-height: 7
+#| fig-cap: Trait responses to global change drivers
 
-tar_load(trait_figure_subalpine)
+tar_read(n_trait_figure)
 
-trait_figure_subalpine
+```
+
+### Warming x Grazing
+
+```{r}
+#| label: fig-g-traits
+#| echo: false
+#| warnings: false
+#| message: false
+#| fig-height: 7
+#| fig-cap: Trait responses to global change drivers
+
+tar_read(g_trait_figure)
+
+```
+
+```{r}
+#| label: tbl-wg-traits
+#| echo: false
+#| warnings: false
+#| message: false
+#| fig-cap: Model output from single trait models
+
+tar_load(g_trait_anova)
+
+g_trait_anova |> 
+  ungroup() |> 
+  select(-trait_trans) |> 
+  mutate(sumsq = round(sumsq, 2),
+         df = round(df, 2),
+         statistic = round(statistic, 2),
+         p.value = round(p.value, 3)) |> 
+  rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value") |> 
+  group_by(Traits) |> 
+  gt() |> 
+  tab_options(
+  table.font.size = 12,
+  data_row.padding = gt::px(1)
+  ) |> 
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(Term, "Sum of Square", df, "F", P),
+      rows = P <= 0.05
+    )
+  ) |> 
+  cols_align(
+  align = c("left"),
+  columns = Term
+)
+
+
+```
+
+### Multivariate analysis
+
+```{r}
+#| label: fig-trait_pca
+#| echo: false
+#| eval: false
+#| fig-height: 10
+#| fig-cap: Multivariate traits
+
+tar_read(trait_pca_figure)
 
 ```
 
@@ -64,6 +206,7 @@ The trait correlation is high between the size traits (area, height and dry mass
 ```{r}
 #| label: trait-imputation
 #| echo: false
+#| eval: false
 #| fig-cap: The proportions of the level traits were imputed from before the bootstrapping procedure; plot (blue), block (green), site (orange) or global (red).
 
 tar_load(imputation_plot)
@@ -71,4 +214,3 @@ tar_load(imputation_plot)
 imputation_plot
 
 ```
-
