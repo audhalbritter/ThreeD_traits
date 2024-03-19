@@ -30,7 +30,7 @@ clean_community <- function(cover_raw, metaTurfID, sp_list){
 
     # prettify and order factors
     mutate(origSiteID = recode(origSiteID, "Lia" = "Alpine", "Joa" = "Sub-alpine"),
-           origSiteID = factor(origSiteID, levels = c("Alpine", "Sub-alpine")),
+           #origSiteID = factor(origSiteID, levels = c("Alpine", "Sub-alpine")),
 
            # make new variable for 3 treatments (AC0 is the control)
            treatment = paste0(warming, grazing, Namount_kg_ha_y),
@@ -97,13 +97,12 @@ clean_traits <- function(trait_raw){
         "dry_mass_g" = "dry_mass_g_log",
         "leaf_area_cm2" = "leaf_area_cm2_log",
         "leaf_thickness_mm" = "leaf_thickness_mm_log"
-      )) |>
-    # order traits
-    mutate(trait_trans = factor(trait_trans, levels = c("plant_height_log_cm", "dry_mass_g_log", "leaf_area_log_cm2", "leaf_thickness_log_mm", "ldmc", "sla_cm2_g"))) |>
+      ),
+      trait_trans = factor(trait_trans, levels = c("plant_height_cm_log", "dry_mass_g_log", "leaf_area_cm2_log", "leaf_thickness_mm_log", "sla_cm2_g", "ldmc"))) |>
 
     # prettify and order factors
     mutate(origSiteID = recode(origSiteID, "Lia" = "Alpine", "Joa" = "Sub-alpine"),
-           origSiteID = factor(origSiteID, levels = c("Alpine", "Sub-alpine")),
+           #origSiteID = factor(origSiteID, levels = c("Alpine", "Sub-alpine")),
 
            # make new variable for 3 treatments (AC0 is the control)
            treatment = paste0(warming, grazing, Namount_kg_ha_y),
@@ -115,13 +114,13 @@ clean_traits <- function(trait_raw){
                                                     "AN0", "WN0")),
 
            grazing = recode(grazing, "C" = "Control", "N" = "Natural"),
-           grazing = factor(grazing, levels = c("Control", "Natural")),
+           #grazing = factor(grazing, levels = c("Control", "Natural")),
 
            warming = recode(warming, "A" = "Ambient", "W" = "Warming"),
-           warming = factor(warming, levels = c("Ambient", "Warming")),
+           #warming = factor(warming, levels = c("Ambient", "Warming")),
 
            Namount_kg_ha_y = as.character(Namount_kg_ha_y),
-           Namount_kg_ha_y = factor(Namount_kg_ha_y, levels = c("0", "5", "10", "50", "150")),
+           #Namount_kg_ha_y = factor(Namount_kg_ha_y, levels = c("0", "5", "10", "50", "150")
 
            blockID = as.numeric(blockID))
 

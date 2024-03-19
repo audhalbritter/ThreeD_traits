@@ -18,17 +18,35 @@ tranformation_plan <- list(
 
   # BOOTSTRAPPING
   # make trait impute
+  # warming x grazing data
   tar_target(
-    name = trait_impute,
-    command = make_trait_impute(community, traits)
+    name = wg_trait_impute,
+    command = make_trait_impute(community |>
+                                  filter(Namount_kg_ha_y == 0),
+                                traits |>
+                                  filter(Namount_kg_ha_y == 0))
+
+  ),
+
+
+  tar_target(
+    name = wn_trait_impute,
+    command = make_trait_impute(community |>
+                                  filter(grazing == "Control"),
+                                traits |>
+                                  filter(grazing == "Control"))
 
   ),
 
   # bootstrap and summarise
   tar_target(
-    name = trait_mean,
-    command = make_bootstrapping(trait_impute)
+    name = g_trait_mean,
+    command = make_bootstrapping(wg_trait_impute)
+  ),
 
+  tar_target(
+    name = n_trait_mean,
+    command = make_bootstrapping(wn_trait_impute)
   )
 
 )

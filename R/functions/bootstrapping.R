@@ -21,7 +21,7 @@ make_trait_impute <- function(community, traits){
                           abundance_col = "cover",
                           treatment_col = c("treatment"),
                           treatment_level = c("siteID"),
-                          other_col = c("origSiteID", "origBlockID", "destSiteID", "destBlockID", "Nlevel", "warming", "grazing", "Namount_kg_ha_y"),
+                          other_col = c("origSiteID", "origBlockID", "destSiteID", "destBlockID", "Nlevel", "warming", "grazing", "Namount_kg_ha_y", "Nitrogen_log"),
                           min_n_in_sample = 2)
 
 
@@ -36,7 +36,10 @@ make_bootstrapping <- function(trait_imp){
 
   trait_mean <- trait_summarise_boot_moments(CWM) |>
     ungroup() |>
-    select(-global, -n)
+    select(-global, -n) %>%
+    fancy_trait_name_dictionary(.) |>
+    # order traits
+    mutate(trait_trans = factor(trait_trans, levels = c("plant_height_cm_log", "dry_mass_g_log", "leaf_area_cm2_log", "leaf_thickness_mm_log", "ldmc", "sla_cm2_g")))
 
   return(trait_mean)
 
