@@ -1,35 +1,27 @@
 # figure plan
 figure_plan <- list(
 
-  # trait means
+  # colour palette
   tar_target(
-    name = trait_figure_alpine,
-    command = fancy_trait_name_dictionary(trait_mean) |>
-      mutate(Nitrogen_log = log(Namount_kg_ha_y + 1)) |>
-      filter(origSiteID == "Alpine") |> ungroup() |>
-      ggplot(aes(x = Nitrogen_log, y = mean, colour = warming, linetype = grazing)) +
-      geom_point() +
-      geom_smooth(method = "lm") +
-      scale_colour_manual(values = c("grey30", "#FD6467")) +
-      labs(x = bquote(log(Nitrogen)~kg~ha^-1~y^-1),
-           y = "Mean trait value", title = "Alpine") +
-      facet_wrap(~ trait_fancy, scales = "free") +
-      theme_bw()
+    name = col_palette,
+    command = wes_palette("GrandBudapest1")
   ),
 
+  # trait means
   tar_target(
-    name = trait_figure_subalpine,
-    command = fancy_trait_name_dictionary(trait_mean) |>
-      mutate(Nitrogen_log = log(Namount_kg_ha_y + 1)) |>
-      filter(origSiteID == "Sub-alpine") |> ungroup() |>
-      ggplot(aes(x = Nitrogen_log, y = mean, colour = warming, linetype = grazing)) +
-      geom_point() +
-      geom_smooth(method = "lm") +
-      scale_colour_manual(values = c("grey30", "#FD6467")) +
-      labs(x = bquote(log(Nitrogen)~kg~ha^-1~y^-1),
-           y = "Mean trait value", title = "Sub-alpine") +
-      facet_wrap(~ trait_fancy, scales = "free") +
-      theme_bw()
+    name = g_trait_figure,
+    command = make_g_trait_figure(g_trait_models, g_trait_anova, col_palette)
+      ),
+
+  tar_target(
+    name = n_trait_figure,
+    command = make_n_trait_figure(n_trait_output, n_trait_anova, col_palette)
+  ),
+
+  # multivariate trait pca
+  tar_target(
+    name = trait_pca_figure,
+    command = make_pca_plot(g_trait_pca, n_trait_pca, col_palette)
   )
 
 )
