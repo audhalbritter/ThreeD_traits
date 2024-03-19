@@ -1,5 +1,5 @@
 library("targets")
-source("libraries.R")
+source("other code/libraries.R")
 
 # make the targets that are out of date
 # looks for a file called "_targets.R" in the working directory
