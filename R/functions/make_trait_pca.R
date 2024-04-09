@@ -64,7 +64,7 @@ make_trait_pca <- function(trait_mean){
 
 
 
-make_pca_plot <- function(g_trait_pca, n_trait_pca, col_palette){
+make_pca_plot <- function(g_trait_pca, n_trait_pca, col2){
 
   trait_pca <- g_trait_pca
 
@@ -78,7 +78,7 @@ make_pca_plot <- function(g_trait_pca, n_trait_pca, col_palette){
     geom_point(size = 2) +
     coord_equal() +
     #stat_ellipse(aes(colour = Mean_elevation)) +
-    scale_colour_manual(name = "", values = c("grey40", col_palette[2])) +
+    scale_colour_manual(name = "", values = c(col2, col2[2])) +
     scale_shape_manual(name = "Site and origin", values = c(17, 2, 16, 1),
                        labels = c("Alpine exclosure", "Alpine grazing", "Sub-alpine exclosure", "Sub-alpine grazing")) +
     #scale_colour_viridis_c(end = 0.8, option = "inferno", direction = -1, name = "Elevation m a.s.l.", limits = c(range[1], range[2])) +
@@ -124,7 +124,7 @@ make_pca_plot <- function(g_trait_pca, n_trait_pca, col_palette){
     geom_point(size = 2) +
     coord_equal() +
     scale_shape_manual(name = "", values = c(17, 16)) +
-    scale_colour_manual(name = "", values = c("grey40", col_palette[2])) +
+    scale_colour_manual(name = "", values = c("grey40", col2[2])) +
     scale_alpha(name = "log(nitrogen)", range = c(0.3, 1)) +
     #scale_colour_viridis_c(end = 0.8, option = "inferno", direction = -1) +
     labs(x = glue("PCA1 ({round(e_B2[1] * 100, 1)}%)"),
