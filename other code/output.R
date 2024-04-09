@@ -1,10 +1,9 @@
 # output
 
-tar_load(g_trait_figure)
-tar_load(n_trait_figure)
+tar_load(trait_figure)
 
-ggsave(filename = "other code/output/grazing.png", plot = g_trait_figure, dpi = 300, width = 6, height = 7)
-ggsave(filename = "other code/output/nitrogen.png", plot = n_trait_figure, dpi = 300, width = 6, height = 7)
+ggsave(filename = "other code/output/trait_figure.png", plot = trait_figure, dpi = 300, width = 6, height = 7)
+
 
 tar_load(trait_pca_figure)
 ggsave(filename = "other code/output/pca.png", plot = trait_pca_figure, dpi = 300, width = 8, height = 6)
