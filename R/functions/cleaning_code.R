@@ -41,7 +41,8 @@ clean_community <- function(cover_raw, metaTurfID, sp_list){
                                                     "AC150", "WC150",
                                                     "AN0", "WN0")),
 
-           grazing = recode(grazing, "C" = "Control", "N" = "Natural"),
+           grazing = recode(grazing, "C" = "Ungrazed", "N" = "Grazed"),
+           grazing = factor(grazing, levels = c("Ungrazed", "Grazed")),
            warming = recode(warming, "A" = "Ambient", "W" = "Warming"),
 
            # make same as traits
@@ -113,11 +114,10 @@ clean_traits <- function(trait_raw){
                                                     "AC150", "WC150",
                                                     "AN0", "WN0")),
 
-           grazing = recode(grazing, "C" = "Control", "N" = "Natural"),
-           #grazing = factor(grazing, levels = c("Control", "Natural")),
+           grazing = recode(grazing, "C" = "Ungrazed", "N" = "Grazed"),
+           grazing = factor(grazing, levels = c("Ungrazed", "Grazed")),
 
            warming = recode(warming, "A" = "Ambient", "W" = "Warming"),
-           #warming = factor(warming, levels = c("Ambient", "Warming")),
 
            Namount_kg_ha_y = as.character(Namount_kg_ha_y),
            #Namount_kg_ha_y = factor(Namount_kg_ha_y, levels = c("0", "5", "10", "50", "150")

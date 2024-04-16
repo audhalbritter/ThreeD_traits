@@ -11,8 +11,8 @@ combined_plan <- c(
   download_plan,
   tranformation_plan,
   analysis_plan,
-  figure_plan,
-  manuscript_plan
+  figure_plan#,
+  #manuscript_plan
   #si_plan
   # si_figure_plan
 )

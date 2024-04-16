@@ -32,9 +32,9 @@ tranformation_plan <- list(
   tar_target(
     name = wn_trait_impute,
     command = make_trait_impute(community |>
-                                  filter(grazing == "Control"),
+                                  filter(grazing == "Ungrazed"),
                                 traits |>
-                                  filter(grazing == "Control"))
+                                  filter(grazing == "Ungrazed"))
 
   ),
 

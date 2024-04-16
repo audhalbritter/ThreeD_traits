@@ -1,10 +1,9 @@
 # output
 
-tar_load(g_trait_figure)
-tar_load(n_trait_figure)
+tar_load(trait_figure)
 
-ggsave(filename = "other code/output/grazing.png", plot = g_trait_figure, dpi = 300, width = 6, height = 7)
-ggsave(filename = "other code/output/nitrogen.png", plot = n_trait_figure, dpi = 300, width = 6, height = 7)
+ggsave(filename = "other code/output/trait_figure2.png", plot = trait_figure, dpi = 300, width = 8, height = 10)
+
 
 tar_load(trait_pca_figure)
 ggsave(filename = "other code/output/pca.png", plot = trait_pca_figure, dpi = 300, width = 8, height = 6)
@@ -85,7 +84,7 @@ gt <- g_trait_anova |>
          p.value = round(p.value, 3)) |>
   rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value")
 
-tabg1 <- t |>
+tabg1 <- gt |>
   filter(Traits %in% c("Height~(cm)", "Dry~mass~(g)", "Area~(cm^2)")) |>
   group_by(Traits) |>
   gt() |>
@@ -107,7 +106,7 @@ tabg1 <- t |>
     columns = Term
   )
 
-tabg2 <- t |>
+tabg2 <- gt |>
   filter(!Traits %in% c("Height~(cm)", "Dry~mass~(g)", "Area~(cm^2)")) |>
   group_by(Traits) |>
   gt() |>
@@ -133,3 +132,7 @@ tabg2 <- t |>
 gt_two_column_layout(listed_tables <- list(tabg1, tabg2), output = "save",
                      filename = "other code/output/g_trait_stats.png",
                      vwidth = 680, vheight = 400)
+
+
+g_trait_pca[[4]] |> tidy()
+n_trait_pca[[4]] |> tidy()

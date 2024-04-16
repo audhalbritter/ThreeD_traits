@@ -1,4 +1,5 @@
 ## TRAITS (PCA)
+
 make_trait_pca <- function(trait_mean){
 
   set.seed(32)
@@ -44,27 +45,26 @@ make_trait_pca <- function(trait_mean){
     #        class = factor(class, levels = c("Size", "Leaf economics", "Isotopes", "Environment")))
 
   # permutation test
-  # traits
-  # raw <- cwm_fat %>% select(-(Gradient:SoilTemperature))
-  # # meta data
-  # meta <- cwm_fat %>% select(Gradient:SoilTemperature) %>%
-  #   mutate(Site = factor(Site))
-  #
-  # # adonis test
-  # if(meta %>% distinct(Gradient) %>% count() == 2){
-  #   adonis_result <- adonis2(raw ~ Gradient*Mean_elevation , data = meta, permutations = 999, method = "euclidean")
-  # } else {
-  #   adonis_result <- adonis2(raw ~ Mean_elevation, data = meta, permutations = 999, method = "euclidean")
-  # }
+  raw <- cwm_fat |> select(-(turfID:Nitrogen_log))
+  # meta data
+  meta <- cwm_fat|> select(turfID:Nitrogen_log) |>
+    mutate(origSiteID = factor(origSiteID))
 
-  outputList <- list(pca_sites, pca_traits, pca_output)
+  # adonis test
+  if(meta %>% distinct(grazing) %>% count() == 2){
+    adonis_result <- adonis2(raw ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = meta, permutations = 999, method = "euclidean")
+  } else {
+    adonis_result <- adonis2(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = meta, permutations = 999, method = "euclidean")
+  }
+
+  outputList <- list(pca_sites, pca_traits, pca_output, adonis_result)
 
   return(outputList)
 }
 
 
 
-make_pca_plot <- function(g_trait_pca, n_trait_pca, col_palette){
+make_pca_plot <- function(g_trait_pca, n_trait_pca, col2){
 
   trait_pca <- g_trait_pca
 
@@ -78,7 +78,7 @@ make_pca_plot <- function(g_trait_pca, n_trait_pca, col_palette){
     geom_point(size = 2) +
     coord_equal() +
     #stat_ellipse(aes(colour = Mean_elevation)) +
-    scale_colour_manual(name = "", values = c("grey40", col_palette[2])) +
+    scale_colour_manual(name = "", values = c(col2, col2[2])) +
     scale_shape_manual(name = "Site and origin", values = c(17, 2, 16, 1),
                        labels = c("Alpine exclosure", "Alpine grazing", "Sub-alpine exclosure", "Sub-alpine grazing")) +
     #scale_colour_viridis_c(end = 0.8, option = "inferno", direction = -1, name = "Elevation m a.s.l.", limits = c(range[1], range[2])) +
@@ -124,7 +124,7 @@ make_pca_plot <- function(g_trait_pca, n_trait_pca, col_palette){
     geom_point(size = 2) +
     coord_equal() +
     scale_shape_manual(name = "", values = c(17, 16)) +
-    scale_colour_manual(name = "", values = c("grey40", col_palette[2])) +
+    scale_colour_manual(name = "", values = c("grey40", col2[2])) +
     scale_alpha(name = "log(nitrogen)", range = c(0.3, 1)) +
     #scale_colour_viridis_c(end = 0.8, option = "inferno", direction = -1) +
     labs(x = glue("PCA1 ({round(e_B2[1] * 100, 1)}%)"),
