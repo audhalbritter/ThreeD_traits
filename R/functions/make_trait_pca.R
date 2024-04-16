@@ -1,4 +1,5 @@
 ## TRAITS (PCA)
+
 make_trait_pca <- function(trait_mean){
 
   set.seed(32)
@@ -44,20 +45,19 @@ make_trait_pca <- function(trait_mean){
     #        class = factor(class, levels = c("Size", "Leaf economics", "Isotopes", "Environment")))
 
   # permutation test
-  # traits
-  # raw <- cwm_fat %>% select(-(Gradient:SoilTemperature))
-  # # meta data
-  # meta <- cwm_fat %>% select(Gradient:SoilTemperature) %>%
-  #   mutate(Site = factor(Site))
-  #
-  # # adonis test
-  # if(meta %>% distinct(Gradient) %>% count() == 2){
-  #   adonis_result <- adonis2(raw ~ Gradient*Mean_elevation , data = meta, permutations = 999, method = "euclidean")
-  # } else {
-  #   adonis_result <- adonis2(raw ~ Mean_elevation, data = meta, permutations = 999, method = "euclidean")
-  # }
+  raw <- cwm_fat |> select(-(turfID:Nitrogen_log))
+  # meta data
+  meta <- cwm_fat|> select(turfID:Nitrogen_log) |>
+    mutate(origSiteID = factor(origSiteID))
 
-  outputList <- list(pca_sites, pca_traits, pca_output)
+  # adonis test
+  if(meta %>% distinct(grazing) %>% count() == 2){
+    adonis_result <- adonis2(raw ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = meta, permutations = 999, method = "euclidean")
+  } else {
+    adonis_result <- adonis2(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = meta, permutations = 999, method = "euclidean")
+  }
+
+  outputList <- list(pca_sites, pca_traits, pca_output, adonis_result)
 
   return(outputList)
 }
