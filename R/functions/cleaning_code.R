@@ -62,7 +62,10 @@ clean_community <- function(cover_raw, metaTurfID, sp_list){
                                         species %in% c("Oxytropa laponica", "Galium verum", "Veronica officinalis", "Erigeron uniflorus", "Epilobium anagallidifolium") ~ "forb",
                                         TRUE ~ functional_group)) |>
     ungroup() |>
-    select(-date, -recorder, -scribe, -file, -genus, -family)
+    select(-date, -recorder, -scribe, -file, -genus, -family) |>
+
+    # remove treatments with no trait data
+    filter(!is.na(treatment))
 
 }
 
@@ -101,6 +104,10 @@ clean_traits <- function(trait_raw){
       ),
       trait_trans = factor(trait_trans, levels = c("plant_height_cm_log", "dry_mass_g_log", "leaf_area_cm2_log", "leaf_thickness_mm_log", "sla_cm2_g", "ldmc"))) |>
 
+    # add origSiteID for 23 leaves where it is missing (have no turfID)
+    mutate(origSiteID = if_else(is.na(origSiteID), "Joa", origSiteID),
+           destSiteID = if_else(is.na(destSiteID), "Joa", destSiteID)) |>
+
     # prettify and order factors
     mutate(origSiteID = recode(origSiteID, "Lia" = "Alpine", "Joa" = "Sub-alpine"),
            #origSiteID = factor(origSiteID, levels = c("Alpine", "Sub-alpine")),
@@ -122,6 +129,8 @@ clean_traits <- function(trait_raw){
            Namount_kg_ha_y = as.character(Namount_kg_ha_y),
            #Namount_kg_ha_y = factor(Namount_kg_ha_y, levels = c("0", "5", "10", "50", "150")
 
-           blockID = as.numeric(blockID))
+           blockID = as.numeric(blockID)) |>
+    # remove 27 accidental some observations with warm, grazing and N5
+    filter(!is.na(treatment))
 
 }
