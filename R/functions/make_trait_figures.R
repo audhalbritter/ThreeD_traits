@@ -2,56 +2,6 @@
 
 make_single_trait_figure <- function(g_trait_models, g_trait_anova, n_trait_output, n_trait_anova, col1, col2){
 
-  # Grazing and warming model
-  pred = g_trait_models |>
-    unnest(prediction) |>
-    select(trait_trans, figure_names, mean:.std.resid) |>
-    filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
-    mutate(figure_names = factor(figure_names,
-                                 levels = c("Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")),
-           origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
-
-  text = g_trait_anova |>
-    filter(!str_detect(term, "Residuals"),
-           p.value <= 0.05) |>
-    filter(trait_trans %in% c("leaf_thickness_mm_log", "sla_cm2_g", "ldmc")) |>
-    mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
-    mutate(figure_names = factor(figure_names,
-                                 levels = c("Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")))
-
-  grazing <- ggplot(pred, aes(x = warming, y = mean, fill = grazing)) +
-    geom_boxplot() +
-    # text
-    geom_text(data = pred |>
-                distinct(figure_names, origSiteID, warming, grazing) |>
-                left_join(text |>
-                            ungroup() |>
-                            filter(!str_detect(term, "G|W")),
-                          by = c("figure_names")),
-              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -4, label = term),
-              size = 3, colour = "black") +
-    geom_text(data = pred |>
-                distinct(figure_names, origSiteID, warming, grazing) |>
-                left_join(text |>
-                            ungroup() |>
-                            filter(str_detect(term, "W")),
-                          by = c("figure_names")),
-              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -2.4, label = term),
-              size = 3, colour = "black") +
-    geom_text(data = pred |>
-                distinct(figure_names, origSiteID, warming, grazing) |>
-                left_join(text |>
-                            ungroup() |>
-                            filter(str_detect(term, "G")),
-                          by = c("figure_names")),
-              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -0.8, label = term),
-              size = 3, colour = "black") +
-    scale_fill_manual(name = "", values = c(col1[2], col1[1])) +
-    labs(y = "Mean trait value", x = "", tag = "b)") +
-    facet_grid(figure_names ~ origSiteID, scales = "free_y",
-                labeller = label_parsed) +
-    theme_bw()
-
   # Nitrogen and warming model
   pred_n = n_trait_output |>
     # merge data and prediction
@@ -62,7 +12,7 @@ make_single_trait_figure <- function(g_trait_models, g_trait_anova, n_trait_outp
     filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)"))
 
   dat = n_trait_output |>
-    filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf area~(cm^2)", "Leaf~thickness~(mm)")) |>
+    filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)")) |>
     unnest(data) |>
     select(trait_trans:mean)
 
@@ -93,41 +43,50 @@ make_single_trait_figure <- function(g_trait_models, g_trait_anova, n_trait_outp
     geom_line(data = pred_n,
               mapping = aes(y = prediction)) +
     # text
+    geom_text(data = pred_n |>
+                distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
+                full_join(text_n |>
+                            filter(vjust_var == -0.8),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred_n |>
+                distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
+                full_join(text_n |>
+                            filter(vjust_var == -2.6),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred_n |>
+                distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
+                full_join(text_n |>
+                            filter(vjust_var == -4),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred_n |>
+                distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
+                full_join(text_n |>
+                            filter(vjust_var == -5.6,
+                                   term == "W"),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
+              size = 3, colour = "black") +
       geom_text(data = pred_n |>
                   distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
                   full_join(text_n |>
-                              filter(vjust_var == -0.8),
+                              filter(vjust_var == -5.6,
+                                     term == "N"),
                             by = c("figure_names")),
                 aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
                 size = 3, colour = "black") +
-      geom_text(data = pred_n |>
-                  distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
-                  full_join(text_n |>
-                              filter(vjust_var == -2.6),
-                            by = c("figure_names")),
-                aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
-                size = 3, colour = "black") +
-      geom_text(data = pred_n |>
-                  distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
-                  full_join(text_n |>
-                              filter(vjust_var == -4),
-                            by = c("figure_names")),
-                aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
-                size = 3, colour = "black") +
-      geom_text(data = pred_n |>
-                  distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
-                  full_join(text_n |>
-                              filter(vjust_var == -5.6),
-                            by = c("figure_names")),
-                aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
-                size = 3, colour = "black") +
-      geom_text(data = pred_n |>
-                  distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
-                  full_join(text_n |>
-                              filter(vjust_var == -7.2),
-                            by = c("figure_names")),
-                aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
-                size = 3, colour = "black") +
+    geom_text(data = pred_n |>
+                distinct(figure_names, origSiteID, warming, Nitrogen_log) |>
+                full_join(text_n |>
+                            filter(vjust_var == -7.2),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
+              size = 3, colour = "black") +
     # change labels to real values
     scale_x_continuous(breaks = c(log(1), log(5), log(25), log(150)), labels = c(1, 5, 25, 150)) +
     scale_colour_manual(name = "", values = c("grey40", col2[2])) +
@@ -138,12 +97,230 @@ make_single_trait_figure <- function(g_trait_models, g_trait_anova, n_trait_outp
          y = "Mean trait value",
          tag = "a)") +
     facet_wrap(~ figure_names, scales = "free", labeller = label_parsed) +
-    theme_bw()
+    theme_bw() +
+    theme(legend.position = "top",
+          legend.key.width = unit(1.75, "line"))
 
-  (nitrogen / grazing) + plot_layout(heights = c(3, 2), guides = 'collect', axes = "collect")
+
+  # Warming only model
+  pred = g_trait_models |>
+    unnest(prediction) |>
+    select(trait_trans, figure_names, mean:.std.resid) |>
+    filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
+    mutate(figure_names = factor(figure_names,
+                                 levels = c("SLA~(cm^2*g^{-1})", "LDMC")),
+           origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
+
+  text = g_trait_anova |>
+    filter(!str_detect(term, "Residuals"),
+           p.value <= 0.05) |>
+    filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
+    mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
+    mutate(figure_names = factor(figure_names,
+                                 levels = c("SLA~(cm^2*g^{-1})", "LDMC")))
+
+  warming <- pred |>
+    #filter(grazing == "Ungrazed") |>
+    ggplot(aes(x = origSiteID, y = mean, fill = warming)) +
+      geom_boxplot() +
+      # text
+      geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(term == "O"),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -2.4, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(str_detect(term, "W")),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -0.8, label = term),
+              size = 3, colour = "black") +
+      scale_fill_manual(name = "", values = c("grey40", col2[2])) +
+      labs(y = "Mean trait value", x = "", tag = "b)") +
+      facet_wrap(~ figure_names, scales = "free_y",
+                 labeller = label_parsed) +
+      theme_bw() +
+      theme(legend.position = "top")
+
+  # Grazing only model
+  grazing <- pred |>
+    #filter(grazing == "Ambient") |>
+    ggplot(aes(x = origSiteID, y = mean, fill = grazing)) +
+    geom_boxplot() +
+    # text
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(term == "O"),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -2.4, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(str_detect(term, "G")),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -0.8, label = term),
+              size = 3, colour = "black") +
+    scale_fill_manual(name = "", values = c(col1[1], col1[2])) +
+    labs(y = "Mean trait value", x = "", tag = "c)") +
+    facet_wrap(~ figure_names, scales = "free_y",
+               labeller = label_parsed) +
+    theme_bw() +
+    theme(legend.position = "top")
+
+
+  (nitrogen / warming / grazing) + #plot_layout(heights = c(6, 2, 2))
+  plot_layout(heights = c(6, 2, 2))
 
 
 }
+
+
+# grazing_only <- ggplot(pred, aes(x = grazing, y = mean, fill = grazing)) +
+#   geom_boxplot() +
+#   # text
+#   geom_text(data = pred |>
+#               distinct(figure_names, origSiteID, warming, grazing) |>
+#               left_join(text |>
+#                           ungroup() |>
+#                           filter(!str_detect(term, "G|W")),
+#                         by = c("figure_names")),
+#             aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -4, label = term),
+#             size = 3, colour = "black") +
+#   geom_text(data = pred |>
+#               distinct(figure_names, origSiteID, warming, grazing) |>
+#               left_join(text |>
+#                           ungroup() |>
+#                           filter(str_detect(term, "G")),
+#                         by = c("figure_names")),
+#             aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -2.4, label = term),
+#             size = 3, colour = "black") +
+#   scale_fill_manual(name = "", values = c(col1[1], col1[2])) +
+#   labs(y = "Mean trait value", x = "", tag = "b)") +
+#   facet_grid(figure_names ~ origSiteID, scales = "free_y",
+#              labeller = label_parsed) +
+#   theme_bw() +
+#   theme(legend.position = "top")
+
+# APPENDIX FIGURE
+make_GxW_figure <- function(g_trait_models, g_trait_anova, col1){
+
+  # Grazing and warming model
+  pred = g_trait_models |>
+    unnest(prediction) |>
+    select(trait_trans, figure_names, mean:.std.resid) |>
+    filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
+    mutate(figure_names = factor(figure_names,
+                                 levels = c("SLA~(cm^2*g^{-1})", "LDMC")),
+           origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
+
+  text = g_trait_anova |>
+    filter(!str_detect(term, "Residuals"),
+           p.value <= 0.05) |>
+    filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
+    mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
+    mutate(figure_names = factor(figure_names,
+                                 levels = c("SLA~(cm^2*g^{-1})", "LDMC")))
+
+  ggplot(pred, aes(x = grazing, y = mean, fill = warming)) +
+    geom_boxplot() +
+    # text
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(!str_detect(term, "G|W")),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -4, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(str_detect(term, "W")),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -2.4, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(str_detect(term, "G")),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -0.8, label = term),
+              size = 3, colour = "black") +
+    scale_fill_manual(name = "", values = c("grey40", col2[2])) +
+    labs(y = "Mean trait value", x = "", tag = "b)") +
+    facet_grid(figure_names ~ origSiteID, scales = "free_y",
+               labeller = label_parsed) +
+    theme_bw() +
+    theme(legend.position = "top")
+
+}
+
+
+make_single_trait_appendix_figure <- function(g_trait_models, g_trait_anova, col2){
+
+  pred = g_trait_models |>
+    unnest(prediction) |>
+    select(trait_trans, figure_names, mean:.std.resid) |>
+    mutate(figure_names = factor(figure_names,
+                                 levels = c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")),
+           origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
+
+  text = g_trait_anova |>
+    filter(!str_detect(term, "Residuals"),
+           p.value <= 0.05) |>
+    mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
+    mutate(figure_names = factor(figure_names,
+                                 levels = c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")))
+
+
+  ggplot(pred, aes(x = warming, y = mean, fill = warming)) +
+    geom_boxplot() +
+    # text
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(term == "O"),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -4, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(term == "W"),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -2.4, label = term),
+              size = 3, colour = "black") +
+    geom_text(data = pred |>
+                distinct(figure_names, origSiteID, warming, grazing) |>
+                left_join(text |>
+                            ungroup() |>
+                            filter(term == "WxO"),
+                          by = c("figure_names")),
+              aes(x = x_var, y = y_var, hjust = hjust_var, vjust = -0.8, label = term),
+              size = 3, colour = "black") +
+    scale_fill_manual(name = "", values = c("grey40", col2[2])) +
+    labs(y = "Mean trait value", x = "") +
+    facet_grid(figure_names ~ origSiteID, scales = "free_y",
+               labeller = label_parsed) +
+    theme_bw() +
+    theme(legend.position = "top")
+
+}
+
+
 
 # w <- text |>
 #   filter(!figure_names %in% c("Height~(cm)", "Dry~mass~(g)", "Area~(cm^2)")) |>
