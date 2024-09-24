@@ -47,6 +47,15 @@ tranformation_plan <- list(
   tar_target(
     name = n_trait_mean,
     command = make_bootstrapping(wn_trait_impute)
+  ),
+
+  # multivariate functional diversity
+  tar_target(
+    name = multivariate_traits,
+    command = make_multi_trait_impute(community |>
+                                        filter(Namount_kg_ha_y == 0),
+                                      traits |>
+                                        filter(Namount_kg_ha_y == 0))
   )
 
 )
