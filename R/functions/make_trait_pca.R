@@ -45,6 +45,7 @@ make_trait_pca <- function(trait_mean){
     #        class = factor(class, levels = c("Size", "Leaf economics", "Isotopes", "Environment")))
 
   # permutation test
+  trait_mean <- g_trait_mean
   raw <- cwm_fat |> select(-(turfID:Nitrogen_log))
   # meta data
   meta <- cwm_fat|> select(turfID:Nitrogen_log) |>
@@ -57,12 +58,23 @@ make_trait_pca <- function(trait_mean){
     adonis_result <- adonis2(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = meta, permutations = 999, method = "euclidean")
   }
 
+  # rda
+  g.rda <- rda(raw ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = meta, scale = TRUE, center = TRUE)
+  anova(g.rda, permutations = 9999, by = "term")
+
+  n.rda <- rda(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = meta)
+  RsquareAdj(n.rda)
+  anova(n.rda, permutations=9999, by = "term")
+  anova.cca(n.rda, step = 1000)
+  anova.cca(n.rda, step = 1000, by = "term")
+
   outputList <- list(pca_sites, pca_traits, pca_output, adonis_result)
 
   return(outputList)
 }
 
-
+# ordiplot(g.rda, scaling = 2, type = "text")
+# fortify(g.rda)
 
 make_pca_plot <- function(g_trait_pca, n_trait_pca, col2){
 

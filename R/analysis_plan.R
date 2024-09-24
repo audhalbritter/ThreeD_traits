@@ -74,7 +74,7 @@ tar_target(
       ungroup() |>
       unnest(result) |>
       select(figure_names, names, term:p.value)
-  ),
+  )
 
 #   # check models
 #   tar_quarto(name = model_check,
@@ -83,13 +83,13 @@ tar_target(
 
   # MULTIVARIATE TRATI ANALYSIS
 
-  tar_target(
-    name = g_trait_pca,
-    command = make_trait_pca(g_trait_mean)
-  ),
-
-  tar_target(
-    name = n_trait_pca,
-    command = make_trait_pca(n_trait_mean)
-  )
-)
+#   tar_target(
+#     name = g_trait_pca,
+#     command = make_trait_pca(g_trait_mean)
+#   ),
+#
+#   tar_target(
+#     name = n_trait_pca,
+#     command = make_trait_pca(n_trait_mean)
+#   )
+ )
