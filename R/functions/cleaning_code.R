@@ -21,7 +21,7 @@ clean_community <- function(cover_raw, metaTurfID, sp_list){
                                str_detect(species, "Pyrola") ~ "Pyrola sp",
                                TRUE ~ species)) |>
     # Remove Carex rupestris and norvegica cf, Carex sp, because they are very uncertain
-    filter(!str_detect(species, "Unknown"),
+    tidylog::filter(!str_detect(species, "Unknown"),
            !species %in% c("Carex rupestris", "Carex rupestris cf",
                            "Carex norvegica cf", "Carex sp")) |>
 
