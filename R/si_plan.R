@@ -4,23 +4,41 @@ si_plan <- list(
 
   # CHECK TRAIT CORRELATIONS
 
-  tar_target(
+   tar_target(
     name = trait_correlation_plot,
     command = {
 
       # make correlation table of all traits
-      corr_table <- trait_mean %>%
+      corr_table_g <- g_trait_mean %>%
         fancy_trait_name_dictionary(.) |>
         ungroup() |>
-        select(siteID:mean, trait_fancy, -trait_trans) |>
+        select(origSiteID:mean, trait_fancy, -trait_trans) |>
         pivot_wider(names_from = trait_fancy, values_from = mean)  |>
         select(`Height cm`:`SLA cm2/g`) %>%
         cor(.)
 
-      ggcorrplot(corr_table,
+      g_plot <- ggcorrplot(corr_table_g,
                  lab = TRUE,
                  ggtheme = ggplot2::theme_bw(),
-                 colors = c("#6D9EC1", "white", "#E46726"))
+                 colors = c("#6D9EC1", "white", "#E46726"),
+                 title = "Warming x grazing")
+
+      # make correlation table of all traits
+      corr_table_n <- n_trait_mean %>%
+        fancy_trait_name_dictionary(.) |>
+        ungroup() |>
+        select(origSiteID:mean, trait_fancy, -trait_trans) |>
+        pivot_wider(names_from = trait_fancy, values_from = mean)  |>
+        select(`Height cm`:`SLA cm2/g`) %>%
+        cor(.)
+
+      n_plot <- ggcorrplot(corr_table_n,
+                 lab = TRUE,
+                 ggtheme = ggplot2::theme_bw(),
+                 colors = c("#6D9EC1", "white", "#E46726"),
+                 title = "Warming x nitrogen")
+
+      n_plot + g_plot + plot_layout(guides = "collect")
 
     }
   ),
@@ -42,20 +60,24 @@ si_plan <- list(
   # ),
 
   # trait imputation plot
+
   tar_target(
-    name = imputation_plot,
+    name = trait_names,
+    command = c(
+      "plant_height_log_cm" = "Height cm",
+      "dry_mass_g_log" = "Dry mass g",
+      "leaf_area_log_cm2" = "Area cm2",
+      "leaf_thickness_log_mm" = "Thickness mm",
+      "ldmc" = "LDMC",
+      "sla_cm2_g" = "SLA cm2/g")
+  ),
+
+  tar_target(
+    name = imputation_plot_g,
     command = {
 
-      trait_names <- c(
-        "plant_height_log_cm" = "Height cm",
-        "dry_mass_g_log" = "Dry mass g",
-        "leaf_area_log_cm2" = "Area cm2",
-        "leaf_thickness_log_mm" = "Thickness mm",
-        "ldmc" = "LDMC",
-        "sla_cm2_g" = "SLA cm2/g")
-
       #check trait coverage
-      imputation_plot <- trait_impute %>%
+      wg_trait_impute %>%
         autoplot(., other_col_how = "ignore") +
         scale_fill_manual(labels = c("turfID", "blockID", "siteID", "global"),
                           values = c("#56B4E9", "#009E73", "#E69F00", "#D55E00")) +
@@ -69,6 +91,78 @@ si_plan <- list(
         theme(axis.text.x = element_text(angle = 90))
 
     }
+  ),
+
+  tar_target(
+    name = imputation_plot_n,
+    command = {
+
+      ids <- wn_trait_impute %>%
+        mutate(id = paste(origSiteID, origBlockID, turfID, sep = "_"),
+               name = paste(origSiteID, warming, Namount_kg_ha_y, grazing, sep = "_")) |>
+        ungroup() |>
+        arrange(origSiteID) |>
+        distinct(id)
+
+      #check trait coverage
+      wn_trait_impute %>%
+        autoplot(., other_col_how = "ignore") +
+        scale_fill_manual(labels = c("turfID", "blockID", "siteID", "global"),
+                          values = c("#56B4E9", "#009E73", "#E69F00", "#D55E00")) +
+        scale_y_continuous(breaks = c(0, 0.5, 1)) +
+        #scale_x_discrete(labels = c("A W0C" = "Alpine_1_3 WN1C 85")) +
+        facet_wrap(~ trait_trans, labeller = labeller(trait_trans = trait_names)) +
+        labs(x = "Treatments") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 90))
+
+    }
+  ),
+
+  tar_target(
+    name = species_list,
+    command = traits |>
+      distinct(siteID, species) |>
+      tidylog::filter(!str_detect(species, "Unknown"),
+                      !species %in% c("Carex rupestris", "Carex rupestris cf",
+                                      "Carex norvegica cf", "Carex sp")) |>
+      left_join(community |>
+                  mutate(siteID = case_when(destSiteID == "Joa" ~ "Joasete",
+                                            destSiteID == "Vik" ~ "Vikesland",
+                                            destSiteID == "Lia" ~ "Liahovden")) |>
+                  distinct(siteID, species, cover, functional_group) |>
+                  group_by(siteID, species, functional_group)|>
+                  summarise(cover = mean(cover)),
+                by = c("siteID", "species")) |>
+      # prettify and order factors
+      mutate(siteID = recode(siteID,
+                             "Liahovden" = "Alpine",
+                             "Joasete" = "Sub-alpine",
+                             "Vikesland" = "Boreal"),
+             siteID = factor(siteID, levels = c("Alpine", "Sub-alpine", "Boreal"))) |>
+      # fix NA's in functional group
+      mutate(functional_group = case_when(species %in% c("Carex norvegica", "Carex atrata", "Carex pilulifera", "Poa alpina", "Deschampsia cespitosa") ~ "graminoid",
+                                          species %in% c("Viola tricolor", "Antennaria dioica", "Pyrola norvegica", "Antennaria alpina") ~ "forb",
+                                          species == "Salix herbacea" ~ "shrub",
+                                          TRUE ~ functional_group),
+             functional_group = factor(functional_group, levels = c("graminoid", "forb", "legume", "shrub", "pteridophyte"))) |>
+      filter(!is.na(cover)) |>
+      mutate(cover = round(cover, 1)) |>
+      arrange(siteID, functional_group, -cover)
+  ),
+
+  tar_target(
+    name = species_list_out,
+    command = species_list |>
+      gt() |>
+    tab_options(
+      table.font.size = 12,
+      data_row.padding = gt::px(1)
+    ) |>
+    cols_align(
+      align = c("left"),
+      columns = functional_group
+    )
   )
 
 )

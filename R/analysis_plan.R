@@ -74,6 +74,33 @@ tar_target(
       ungroup() |>
       unnest(result) |>
       select(figure_names, names, term:p.value)
+  ),
+
+  tar_target(
+    name = trait_anovas,
+    command = {
+      n <- n_trait_anova |>
+        mutate(sumsq = round(sumsq, 2),
+               df = round(df, 2),
+               statistic = round(statistic, 2),
+               p.value = round(p.value, 3)) |>
+        rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value")
+
+      g <- g_trait_anova |>
+        ungroup() |>
+        select(-trait_trans) |>
+        mutate(sumsq = round(sumsq, 2),
+               df = round(df, 2),
+               statistic = round(statistic, 2),
+               p.value = round(p.value, 3)) |>
+        rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value")
+
+      bind_cols(n,
+                g |>
+                  select(Term_g = Term, `Sum of Square_g` = `Sum of Square`, df_g = df, F_g = 'F', P_g = P))
+
+    }
+
   )
 
 #   # check models

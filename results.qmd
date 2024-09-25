@@ -1,6 +1,8 @@
 ---
 title: "Trait responses to global change"
-format: html
+format: 
+  html:
+    self-contained: true
 editor: visual
 execute:
   warnings: false
@@ -10,9 +12,11 @@ execute:
 ```{r}
 #| label: set-up
 #| echo: false
+#| message: false
 
 library(targets)
 library(tarchetypes)
+library(tidyverse)
 library(ggplot2)
 library(ggcorrplot)
 library(gt)
@@ -20,153 +24,74 @@ library(gtExtras)
 
 ```
 
-## Methods
-
-Run models without 3-way interaction and log-transform nitrogen addition.
-
-### Warming x nitrogen addition
-
-**log**: lm(trait \~ warming \* log(nitrogen) + warming \* origSiteID + log(nitrogen) \* origSiteID, data)
-
-### Warming x grazing
-
-**linear**: lm(trait \~ warming \* grazing + warming \* origSiteID + grazing \* origSiteID, data)
 
 # Results
 
-### Warming x Nitrogen
+### Plant functional traits
+
+```{r}
+#| label: fig-traits
+#| echo: false
+#| warning: false
+#| fig-height: 12
+#| fig-cap: Plant community functional trait responses to warming, nitrogen addition or grazing. a) Bootstrapped trait means increasing nitrogen addition (log-transformed) under ambient (grey) and warm (pink) climate originating from alpine (triangle, solid line) and subalpine (circle, dashed line) sites. Bootstrapped trait means under b) ambient (grey) and warm climate (pink), c) grazed (blue) and ungrazed (orange) conditions, originating from subalpine and alpine sites. The points show the raw data and the lines, the predictions and confidence intervals from the model. The letters in the bottom right corner indicate significant effects of W = warming, N = nitrogen addition, G = grazing, and O = origin community, with WxO, NxO, and GxO representing their interaction. 
+
+tar_read(trait_figure)
+```
+
 
 ```{r}
 #| label: tbl-single-traits
 #| echo: false
-#| fig-cap: Model output from single trait models
+#| tbl-cap: Model output from single trait models
 
-tar_load(n_trait_anova)
+tar_load(trait_anovas)
 
-t <- n_trait_anova |> 
-  mutate(sumsq = round(sumsq, 2),
-         df = round(df, 2),
-         statistic = round(statistic, 2),
-         p.value = round(p.value, 3)) |> 
-  rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value")
-
-tab1 <- t |> 
-  filter(Traits %in% c("Height~(cm)", "Dry~mass~(g)", "Area~(cm^2)")) |> 
+trait_anovas |> 
   group_by(Traits) |> 
   gt() |> 
-  tab_options(
-  table.font.size = 12,
-  data_row.padding = gt::px(1)
-  ) |> 
+  tab_spanner(
+      label = md('Warming x nitrogen'),
+      columns = c('Term', 'Sum of Square', 'df', 'F', 'P')
+    ) |> 
+  tab_spanner(
+      label = md('Warming x grazing'),
+      columns = c('Term_g', 'Sum of Square_g', 'df_g', 'F_g', 'P_g')
+    ) |> 
   tab_style(
     style = list(
       cell_text(weight = "bold")
       ),
     locations = cells_body(
-      columns = c(Term, "Sum of Square", df, "F", P),
-      rows = P <= 0.05
-    )
-  ) |> 
-  cols_align(
-  align = c("left"),
-  columns = Term
-)
-  
-tab2 <- t |> 
-  filter(!Traits %in% c("Height~(cm)", "Dry~mass~(g)", "Area~(cm^2)")) |> 
-  group_by(Traits) |> 
-  gt() |> 
-  tab_options(
-  table.font.size = 12,
-  data_row.padding = gt::px(1)
-  ) |> 
+      columns = c('Sum of Square', df, 'F', P),
+      rows = P <= 0.05)
+    )|> 
   tab_style(
     style = list(
       cell_text(weight = "bold")
       ),
     locations = cells_body(
-      columns = c(Term, "Sum of Square", df, "F", P),
-      rows = P <= 0.05
-    )
-  )  |> 
-  cols_align(
-  align = c("left"),
-  columns = Term
-)
-
-listed_tables <- list(tab1, tab2)
-
-gt_two_column_layout(listed_tables)
-  
-  
-
-```
-
-```{r}
-#| label: fig-single-traits
-#| echo: false
-#| warnings: false
-#| message: false
-#| fig-height: 7
-#| fig-cap: Trait responses to global change drivers
-
-tar_read(n_trait_figure)
-
-```
-
-### Warming x Grazing
-
-```{r}
-#| label: fig-g-traits
-#| echo: false
-#| warnings: false
-#| message: false
-#| fig-height: 7
-#| fig-cap: Trait responses to global change drivers
-
-tar_read(g_trait_figure)
-
-```
-
-```{r}
-#| label: tbl-wg-traits
-#| echo: false
-#| warnings: false
-#| message: false
-#| fig-cap: Model output from single trait models
-
-tar_load(g_trait_anova)
-
-g_trait_anova |> 
-  ungroup() |> 
-  select(-trait_trans) |> 
-  mutate(sumsq = round(sumsq, 2),
-         df = round(df, 2),
-         statistic = round(statistic, 2),
-         p.value = round(p.value, 3)) |> 
-  rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value") |> 
-  group_by(Traits) |> 
-  gt() |> 
+      columns = c('Sum of Square_g', df_g, F_g, P_g),
+      rows = P_g <= 0.05)
+    )|> 
+  cols_label(
+    Term_g = "Term",
+    'Sum of Square_g' = "Sum of Square",
+    df_g = "df",
+    F_g = "F",
+    P_g = "P"
+  ) |> 
   tab_options(
   table.font.size = 12,
   data_row.padding = gt::px(1)
-  ) |> 
-  tab_style(
-    style = list(
-      cell_text(weight = "bold")
-      ),
-    locations = cells_body(
-      columns = c(Term, "Sum of Square", df, "F", P),
-      rows = P <= 0.05
-    )
-  ) |> 
-  cols_align(
-  align = c("left"),
-  columns = Term
-)
+  )
+
 
 
 ```
+
+
+
 
 ### Multivariate analysis
 
@@ -177,7 +102,7 @@ g_trait_anova |>
 #| fig-height: 10
 #| fig-cap: Multivariate traits
 
-tar_read(trait_pca_figure)
+#tar_read(trait_pca_figure)
 
 ```
 
@@ -190,12 +115,9 @@ The trait correlation is high between the size traits (area, height and dry mass
 ```{r}
 #| label: trait-correlation
 #| echo: false
-#| eval: false
 #| fig-cap: Correlations between traits.
 
-tar_load(trait_correlation_plot)
-
-trait_correlation_plot
+tar_read(trait_correlation_plot)
 
 ```
 
@@ -204,13 +126,34 @@ trait_correlation_plot
 The trait correlation is high between the size traits (area, height and dry mass).
 
 ```{r}
-#| label: trait-imputation
+#| label: trait-n-imputation
 #| echo: false
-#| eval: false
-#| fig-cap: The proportions of the level traits were imputed from before the bootstrapping procedure; plot (blue), block (green), site (orange) or global (red).
+#| fig-width: 8
+#| fig-cap: The proportions of the level traits were imputed for the warming x nitrogen model; plot (blue), block (green), site (orange) or global (red).
 
-tar_load(imputation_plot)
+tar_read(imputation_plot_n)
 
-imputation_plot
+```
+
+```{r}
+#| label: trait-g-imputation
+#| echo: false
+#| fig-cap: The proportions of the level traits were imputed for the warming x grazing model; plot (blue), block (green), site (orange) or global (red).
+
+tar_read(imputation_plot_g)
+
+```
+
+
+### Species list
+
+Species list at all the sites along the elevational gradient. The species are sorted by cover and functional group.
+
+```{r}
+#| label: tbl-sp-list
+#| echo: false
+#| tbl-cap: List of species at all three sites, sorted by cover and functional group.
+
+tar_read(species_list_out)
 
 ```
