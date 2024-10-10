@@ -24,21 +24,29 @@ library(gtExtras)
 
 ```
 
-
 # Results
 
 ### Plant functional traits
 
 ```{r}
-#| label: fig-traits
+#| label: fig-nitrogen
 #| echo: false
 #| warning: false
 #| fig-height: 12
-#| fig-cap: Plant community functional trait responses to warming, nitrogen addition or grazing. a) Bootstrapped trait means increasing nitrogen addition (log-transformed) under ambient (grey) and warm (pink) climate originating from alpine (triangle, solid line) and subalpine (circle, dashed line) sites. Bootstrapped trait means under b) ambient (grey) and warm climate (pink), c) grazed (blue) and ungrazed (orange) conditions, originating from subalpine and alpine sites. The points show the raw data and the lines, the predictions and confidence intervals from the model. The letters in the bottom right corner indicate significant effects of W = warming, N = nitrogen addition, G = grazing, and O = origin community, with WxO, NxO, and GxO representing their interaction. 
+#| fig-cap: Plant community functional trait responses to warming and nitrogen addition. Bootstrapped trait means increasing nitrogen addition (log-transformed) under ambient (grey) and warm (pink) climate originating from alpine (triangle, solid line) and subalpine (circle, dashed line) sites. The points show the raw data and the lines, the predictions and confidence intervals from the model. The letters in the bottom right corner indicate significant effects of W = warming, N = nitrogen addition, and O = origin community, with WxO and NxO representing their interaction. 
 
-tar_read(trait_figure)
+tar_read(nitrogen_figure)
 ```
 
+```{r}
+#| label: fig-grazing
+#| echo: false
+#| warning: false
+#| fig-height: 12
+#| fig-cap: Plant community functional trait responses to warming and grazing. Bootstrapped trait means under a) ambient (grey) and warm climate (pink), b) grazed (blue) and ungrazed (orange) conditions, originating from subalpine and alpine sites. The points show the raw data and the lines, the predictions and confidence intervals from the model. The letters in the bottom right corner indicate significant effects of W = warming, G = grazing, and O = origin community, with WxO and GxO representing their interaction. 
+
+tar_read(grazing_figure)
+```
 
 ```{r}
 #| label: tbl-single-traits
@@ -63,7 +71,7 @@ trait_anovas |>
       cell_text(weight = "bold")
       ),
     locations = cells_body(
-      columns = c('Sum of Square', df, 'F', P),
+      columns = c("Term", 'Sum of Square', df, 'F', P),
       rows = P <= 0.05)
     )|> 
   tab_style(
@@ -71,7 +79,7 @@ trait_anovas |>
       cell_text(weight = "bold")
       ),
     locations = cells_body(
-      columns = c('Sum of Square_g', df_g, F_g, P_g),
+      columns = c("Term_g", 'Sum of Square_g', df_g, F_g, P_g),
       rows = P_g <= 0.05)
     )|> 
   cols_label(
@@ -89,9 +97,6 @@ trait_anovas |>
 
 
 ```
-
-
-
 
 ### Multivariate analysis
 
@@ -143,7 +148,6 @@ tar_read(imputation_plot_n)
 tar_read(imputation_plot_g)
 
 ```
-
 
 ### Species list
 
