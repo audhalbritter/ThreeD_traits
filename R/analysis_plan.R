@@ -13,14 +13,25 @@ analysis_plan <- list(
              result = map(model, tidy),
              anova = map(model, car::Anova),
              anova_tidy = map(anova, tidy),
-             prediction = map(model, augment, interval = "confidence"))
+             prediction = map(model, augment, interval = "confidence"),
+
+             model_noITV = map(data, ~lm(mean_noitv ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = .)),
+             result_noITV = map(model_noITV, tidy),
+             anova_noITV = map(model_noITV, car::Anova),
+             anova_tidy_noITV = map(anova_noITV, tidy),
+             prediction_noITV = map(model_noITV, augment, interval = "confidence"))
   ),
 
   tar_target(
     name = g_trait_anova,
-    command = g_trait_models |>
-      unnest(anova_tidy) |>
-      select(figure_names, term:p.value) |>
+    command = bind_rows(
+      ITV = g_trait_models |>
+        unnest(anova_tidy) |>
+        select(figure_names, term:p.value),
+      Turnover = g_trait_models |>
+        unnest(anova_tidy_noITV) |>
+        select(figure_names, term:p.value),
+      .id = "process") |>
       mutate(term = case_when(str_detect(term, "warming:origSiteID") ~ "WxO",
                               str_detect(term, "warming:grazing") ~ "WxG",
                               str_detect(term, "grazing:origSiteID") ~ "GxO",
@@ -41,7 +52,8 @@ tar_target(
     name = n_trait_model,
     command = all_n_trait_models |>
       # select log model
-      filter(names == "log")
+      filter(names %in% c("log", "lognoITV")) |>
+      mutate(process = if_else(names == "log", "ITV", "Turnover"))
   ),
 
   # make prediction for nitrogen model
@@ -55,7 +67,7 @@ tar_target(
     name = n_trait_anova,
     command = n_trait_output |>
       ungroup() |>
-      select(figure_names, anova_tidy) |>
+      select(process, figure_names, anova_tidy) |>
       unnest(anova_tidy) |>
       mutate(term = case_when(str_detect(term, "warming:Nitrogen_log") ~ "WxN",
                               str_detect(term, "Nitrogen_log:origSiteID") ~ "NxO",
@@ -73,7 +85,7 @@ tar_target(
     command = n_trait_output |>
       ungroup() |>
       unnest(result) |>
-      select(figure_names, names, term:p.value)
+      select(process, figure_names, names, term:p.value)
   ),
 
   tar_target(
@@ -97,11 +109,25 @@ tar_target(
 
       bind_cols(n,
                 g |>
-                  select(Term_g = Term, `Sum of Square_g` = `Sum of Square`, df_g = df, F_g = 'F', P_g = P))
+                  select(Term_g = Term, `Sum of Square_g` = `Sum of Square`, df_g = df, F_g = 'F', P_g = P)) |>
+        arrange(process, Traits)
 
     }
 
-  )
+  ),
+
+  ### ITV analysis
+
+tar_target(
+  name = itv_output,
+  command = make_ITV_analysis(g_trait_mean, n_trait_mean)
+),
+
+tar_target(
+  name = itv_output2,
+  command = make_ITV2_analysis(g_trait_mean, n_trait_mean)
+)
+
 
 #   # check models
 #   tar_quarto(name = model_check,

@@ -15,9 +15,24 @@ figure_plan <- list(
 
   # trait means
   tar_target(
-    name = trait_figure,
-    command = make_single_trait_figure(g_trait_models, g_trait_anova, n_trait_output, n_trait_anova, col1 = habitat_palette, col2 = warming_palette)
-      )
+    name = nitrogen_figure,
+    command = make_nitrogen_figure(n_trait_output, n_trait_anova, col2 = warming_palette)
+      ),
+
+  tar_target(
+    name = grazing_figure,
+    command = make_grazing_figure(g_trait_models, g_trait_anova, col1 = habitat_palette, col2 = warming_palette)
+  ),
+
+  tar_target(
+    name = itv_figure,
+    command = make_ITV_plot(itv_output)
+  ),
+
+  tar_target(
+    name = itv2_figure,
+    command = make_ITV2_plot(itv_output2)
+  )
 
   # multivariate trait pca
   # tar_target(

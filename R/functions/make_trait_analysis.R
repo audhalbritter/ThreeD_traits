@@ -7,10 +7,12 @@ run_all_models <- function(n_trait_mean){
     nest() |>
     mutate(model_linear = map(data, ~lm(mean ~ warming * Namount_kg_ha_y + warming * origSiteID + Namount_kg_ha_y * origSiteID, data = .)),
            model_log = map(data, ~lm(mean ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = .)),
+           model_lognoITV = map(data, ~lm(mean_noitv ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = .)),
            model_quad = map(data, ~lm(mean ~ warming * poly(Namount_kg_ha_y, 2) + warming * origSiteID + poly(Namount_kg_ha_y, 2) * origSiteID, data = .)),
 
            glance_linear = map(.x = model_linear, .f = ~ safely(glance)(.x)$result),
            glance_log = map(.x = model_log, .f = ~ safely(glance)(.x)$result),
+           glance_lognoITV = map(.x = model_lognoITV, .f = ~ safely(glance)(.x)$result),
            glance_quad = map(.x = model_quad, .f = ~ safely(glance)(.x)$result)) |>
     # make long table
     pivot_longer(cols = -c(trait_trans, figure_names, data),
@@ -34,7 +36,7 @@ make_prediction <- function(trait_model){
            anova = map(model, car::Anova),
            anova_tidy = map(anova, tidy),
            # make new data
-           newdata = ifelse(names == "log",
+           newdata = ifelse(names %in% c("log", "lognoITV"),
                             # for log model
                             map(.x = data, .f = ~. |>
                                   distinct(warming, origSiteID) |>
