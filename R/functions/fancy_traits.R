@@ -25,7 +25,7 @@ fancy_trait_name_dictionary <- function(dat){
                                      "ldmc" ~ "LDMC",
                                      "sla_cm2_g" ~ "SLA~(cm^2*g^{-1})")) |>
     mutate(figure_names = factor(figure_names,
-                                 levels = c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")))
+                                 levels = c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC"))) |>
                                      # "C_percent" ~ "C~('%')",
                                      # "N_percent" ~ "N~('%')",
                                      # "CN_ratio" ~ "CN",
@@ -33,11 +33,11 @@ fancy_trait_name_dictionary <- function(dat){
                                      # "NP_ratio" ~ "NP",
                                      # "dC13_permil" ~ "δ^{13}~C~'(‰)'",
                                      # "dN15_permil" ~ "δ^{15}~N~'(‰)'"))
-    # # add class
-    # mutate(class = case_when(trait_trans %in% c("Plant_Height_cm_log", "Dry_Mass_g_log", "Leaf_Area_cm2_log", "Thickness_mm_log", "Shoot_Length_cm_log", "Shoot_Length_Green_cm_log") ~ "Size",
-    #                          trait_trans %in% c("dC13_permil", "dN15_permil") ~ "Isotopes",
-    #                          TRUE ~ "Leaf economics"),
-    #        class = factor(class, levels = c("Size", "Leaf economics", "Isotopes")))
+    # add class
+    mutate(class = case_when(trait_trans %in% c("plant_height_cm_log", "dry_mass_g_log", "leaf_area_cm2_log", "leaf_thickness_mm_log") ~ "Size",
+                             trait_trans %in% c("dC13_permil", "dN15_permil") ~ "Isotopes",
+                             TRUE ~ "Leaf economics"),
+           class = factor(class, levels = c("Size", "Leaf economics", "Isotopes")))
 
   return(dat)
 }
