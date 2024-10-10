@@ -14,5 +14,5 @@ combined_plan <- c(
   figure_plan,
   #manuscript_plan
   si_plan
-  # si_figure_plan
+  #si_figure_plan
 )
