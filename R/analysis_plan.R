@@ -92,6 +92,7 @@ tar_target(
     name = trait_anovas,
     command = {
       n <- n_trait_anova |>
+        filter(process == "ITV") |>
         mutate(sumsq = round(sumsq, 2),
                df = round(df, 2),
                statistic = round(statistic, 2),
@@ -99,6 +100,8 @@ tar_target(
         rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value")
 
       g <- g_trait_anova |>
+
+        filter(process == "ITV") |>
         ungroup() |>
         select(-trait_trans) |>
         mutate(sumsq = round(sumsq, 2),
@@ -110,7 +113,9 @@ tar_target(
       bind_cols(n,
                 g |>
                   select(Term_g = Term, `Sum of Square_g` = `Sum of Square`, df_g = df, F_g = 'F', P_g = P)) |>
-        arrange(process, Traits)
+        ungroup() |>
+        select(-process) |>
+        arrange(Traits)
 
     }
 

@@ -9,18 +9,24 @@ make_nitrogen_figure <- function(n_trait_output, n_trait_anova, col2){
     select(process, trait_trans, figure_names, names, output) |>
     unnest(output) |>
     rename(prediction = fit) |>
-    filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "LDMC"))
+    filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)")) |>
+    mutate(prediction = exp(prediction),
+           lwr = exp(lwr),
+           upr = exp(upr)) |>
+    filter(process == "ITV")
 
   dat = n_trait_output |>
-    filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "LDMC")) |>
+    filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)")) |>
     unnest(data) |>
-    select(process, trait_trans:mean)
+    select(process, trait_trans:mean) |>
+    mutate(mean = exp(mean)) |>
+    filter(process == "ITV")
 
   text_n = n_trait_anova |>
     filter(!str_detect(term, "Residuals"),
            p.value <= 0.05) |>
     mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
-    filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "LDMC")) |>
+    filter(figure_names %in% c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)")) |>
     ungroup() |>
     mutate(vjust_var = case_when(figure_names == "Plant~height~(cm)" & term == "N" ~ -2.6,
                                  figure_names == "Plant~height~(cm)" & term == "WxO" ~ -0.8,
@@ -30,11 +36,13 @@ make_nitrogen_figure <- function(n_trait_output, n_trait_anova, col2){
                                  term == "N" ~ -5.6,
                                  figure_names %in% c("Leaf~dry~mass~(g)", "Leaf~area~(cm^2)") & term == "WxO" ~ -2.6,
                                  term == "NxO" ~ -0.8,
-                                 figure_names ==  "Leaf~thickness~(mm)" & term == "W" ~ -0.8))
+                                 figure_names ==  "Leaf~thickness~(mm)" & term == "W" ~ -0.8)) |>
+    filter(process == "ITV")
+
 
   ggplot(dat, aes(x = Nitrogen_log, y = mean, colour = warming, shape = origSiteID, linetype = origSiteID)) +
-    geom_ribbon(data = pred_n
-                , aes(y = prediction, ymin = lwr,
+    geom_ribbon(data = pred_n,
+                aes(y = prediction, ymin = lwr,
                       ymax = upr,
                       fill = warming),
                 alpha = 0.2,
@@ -95,7 +103,7 @@ make_nitrogen_figure <- function(n_trait_output, n_trait_anova, col2){
     scale_linetype_manual(name = "", values = c("solid", "dashed"), labels = c("Alpine site", "Sub-alpine site")) +
     labs(x = bquote(log(Nitrogen)~kg~ha^-1~y^-1),
          y = "Mean trait value") +
-    facet_grid(figure_names ~ process, scales = "free", labeller = label_parsed) +
+    facet_wrap(~ figure_names, scales = "free", labeller = label_parsed) +
     theme_bw() +
     theme(legend.position = "top",
           legend.key.width = unit(1.75, "line"))
@@ -114,19 +122,21 @@ make_grazing_figure <- function(g_trait_models, g_trait_anova, col1, col2){
               unnest(prediction_noITV) |>
               select(trait_trans, figure_names, mean = mean_noitv, warming:.std.resid),
             .id = "process") |>
-    filter(trait_trans %in% c("dry_mass_g_log", "leaf_thickness_mm_log", "sla_cm2_g", "ldmc")) |>
+    filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
     mutate(figure_names = factor(figure_names,
-                                 levels = c("Leaf~dry~mass~(g)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")),
-           origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
+                          levels = c("SLA~(cm^2*g^{-1})", "LDMC")),
+    origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine"))) |>
+    filter(process == "ITV")
 
 
   text = g_trait_anova |>
     filter(!str_detect(term, "Residuals"),
            p.value <= 0.05) |>
-    filter(trait_trans %in% c("dry_mass_g_log", "leaf_thickness_mm_log", "sla_cm2_g", "ldmc")) |>
+    filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
     mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
     mutate(figure_names = factor(figure_names,
-                                 levels = c("Leaf~dry~mass~(g)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")))
+                                levels = c("SLA~(cm^2*g^{-1})", "LDMC"))) |>
+    filter(process == "ITV")
 
 
   warming <- pred |>
@@ -152,7 +162,7 @@ make_grazing_figure <- function(g_trait_models, g_trait_anova, col1, col2){
               size = 3, colour = "black") +
     scale_fill_manual(name = "", values = c("grey40", col2[2])) +
     labs(y = "Mean trait value", x = "", tag = "a)") +
-    facet_grid(figure_names ~ process, scales = "free_y",
+    facet_wrap(~figure_names , scales = "free_y",
                labeller = label_parsed) +
     theme_bw() +
     theme(legend.position = "top")
@@ -182,7 +192,7 @@ make_grazing_figure <- function(g_trait_models, g_trait_anova, col1, col2){
               size = 3, colour = "black") +
     scale_fill_manual(name = "", values = c(col1[1], col1[2])) +
     labs(y = "Mean trait value", x = "", tag = "b)") +
-    facet_grid(figure_names ~ process, scales = "free_y",
+    facet_wrap(~ figure_names, scales = "free_y",
                labeller = label_parsed) +
     theme_bw() +
     theme(legend.position = "top")
