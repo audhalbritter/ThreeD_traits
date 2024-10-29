@@ -28,7 +28,17 @@ tranformation_plan <- list(
 
   ),
 
+  # warming x grazing data without ITV
+  tar_target(
+    name = wg_trait_null_impute,
+    command = make_trait_null_impute(community |>
+                                  filter(Namount_kg_ha_y == 0),
+                                traits |>
+                                  filter(Namount_kg_ha_y == 0))
 
+  ),
+
+  # warming x N
   tar_target(
     name = wn_trait_impute,
     command = make_trait_impute(community |>
@@ -38,15 +48,44 @@ tranformation_plan <- list(
 
   ),
 
+  # warming x N witout ITV
+  tar_target(
+    name = wn_trait_null_impute,
+    command = make_trait_null_impute(community |>
+                                  filter(grazing == "Ungrazed"),
+                                traits |>
+                                  filter(grazing == "Ungrazed"))
+
+  ),
+
   # bootstrap and summarise
+  # tar_target(
+  #   name = g_trait_mean,
+  #   command = make_bootstrapping(wg_trait_impute)
+  # ),
+
   tar_target(
     name = g_trait_mean,
-    command = make_bootstrapping(wg_trait_impute)
+    command = make_bootstrapping(wg_trait_impute, wg_trait_null_impute)
   ),
+
+  # tar_target(
+  #   name = n_trait_mean,
+  #   command = make_bootstrapping(wn_trait_impute)
+  # ),
 
   tar_target(
     name = n_trait_mean,
-    command = make_bootstrapping(wn_trait_impute)
+    command = make_bootstrapping(wn_trait_impute, wn_trait_null_impute)
   )
+
+  # multivariate functional diversity
+  # tar_target(
+  #   name = multivariate_traits,
+  #   command = make_multi_trait_impute(community |>
+  #                                       filter(Namount_kg_ha_y == 0),
+  #                                     traits |>
+  #                                       filter(Namount_kg_ha_y == 0))
+  # )
 
 )

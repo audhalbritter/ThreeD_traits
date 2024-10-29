@@ -17,7 +17,7 @@ download_plan <- list(
     command =  get_file(node = "fcbw4",
                         file = "PFTC6_ThreeD_clean_leaf_traits_2022.csv",
                         path = "data",
-                        remote_path = "trait_data"),
+                        remote_path = "i. trait_data"),
     format = "file"
   ),
 

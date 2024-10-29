@@ -9,3 +9,8 @@ tar_load_everything()
 tar_visnetwork()
 
 fs::file_show("manuscript/manuscript.pdf")#display pdf
+
+# ggsave("n_fig.png", nitrogen_figure, dpi = 300, height = 6, width = 6)
+# ggsave("g_fig.png", grazing_figure, dpi = 300, height = 6, width = 6)
+# ggsave("itv.png", itv_figure, dpi = 300, height = 6, width = 6)
+# ggsave("itv3.png", itv2_figure, dpi = 300, height = 8, width = 8)
