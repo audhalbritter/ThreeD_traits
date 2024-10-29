@@ -207,7 +207,7 @@ make_ITV2_plot <- function(itv_output){
     pivot_wider(names_from = variable, values_from = value)
 
 
-  var |>
+  dd <- var |>
     ungroup() %>%
     fancy_trait_name_dictionary(.) |>
     mutate(term = case_when(term == "warming:origSiteID" ~ "WxO",
@@ -221,15 +221,38 @@ make_ITV2_plot <- function(itv_output){
                             term == "nitrogen_fct" ~ "N",
                             TRUE ~ term),
            term = factor(term, levels = c("W", "N", "G", "O", "WxN", "WxG", "WxO", "NxO", "GxO", "Residuals"))) |>
-    filter(process %in% c("intraspecific", "turnover")) |>
+    mutate(trait_short = case_when(trait_fancy == "Height cm" ~ "H",
+                                   trait_fancy == "Dry mass g" ~ "LM",
+                                   trait_fancy == "Area cm2" ~ "LA",
+                                   trait_fancy == "Thickness mm" ~ "LT",
+                                   trait_fancy == "SLA cm2/g" ~ "SLA",
+                                   trait_fancy == "LDMC" ~ "LDMC"),
+           trait_short = factor(trait_short, levels = c("H", "LM", "LA", "LT", "SLA", "LDMC"))) |>
     # should not do this!
-    filter(proportion < 10) |>
-    ggplot(aes(x = term, y = proportion, fill = process)) +
+    filter(proportion < 10)
+
+  # dd |>
+  #   filter(process %in% c("intraspecific", "turnover")) |>
+  #   # should not do this!
+  #   filter(proportion < 10) |>
+  #   ggplot(aes(x = term, y = proportion, fill = process)) +
+  #   geom_col() +
+  #   scale_fill_manual(values = c("#0072B2", "#E69F00")) +
+  #   facet_grid(figure_names ~ driver, scales = "free",
+  #              labeller = label_parsed) +
+  #   theme_bw() +
+  #   theme(legend.position = "top")
+
+  dd |>
+    filter(process %in% c("intraspecific", "turnover")) |>
+    ggplot(aes(x = trait_short, y = proportion, fill = process)) +
     geom_col() +
+    labs(x = "", y = "Proportion variability explained") +
     scale_fill_manual(values = c("#0072B2", "#E69F00")) +
-    facet_grid(figure_names ~ driver, scales = "free",
-               labeller = label_parsed) +
-    theme_bw()
+    facet_grid(term ~ driver, scales = "free",
+                 labeller = label_parsed) +
+    theme_bw() +
+    theme(legend.position = "top")
 
 }
 

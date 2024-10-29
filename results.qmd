@@ -32,7 +32,7 @@ library(gtExtras)
 #| label: fig-nitrogen
 #| echo: false
 #| warning: false
-#| fig-height: 12
+#| fig-height: 6
 #| fig-cap: Plant community functional trait responses to warming and nitrogen addition. Bootstrapped trait means increasing nitrogen addition (log-transformed) under ambient (grey) and warm (pink) climate originating from alpine (triangle, solid line) and subalpine (circle, dashed line) sites. The points show the raw data and the lines, the predictions and confidence intervals from the model. The letters in the bottom right corner indicate significant effects of W = warming, N = nitrogen addition, and O = origin community, with WxO and NxO representing their interaction. 
 
 tar_read(nitrogen_figure)
@@ -42,7 +42,7 @@ tar_read(nitrogen_figure)
 #| label: fig-grazing
 #| echo: false
 #| warning: false
-#| fig-height: 12
+#| fig-height: 6
 #| fig-cap: Plant community functional trait responses to warming and grazing. Bootstrapped trait means under a) ambient (grey) and warm climate (pink), b) grazed (blue) and ungrazed (orange) conditions, originating from subalpine and alpine sites. The points show the raw data and the lines, the predictions and confidence intervals from the model. The letters in the bottom right corner indicate significant effects of W = warming, G = grazing, and O = origin community, with WxO and GxO representing their interaction. 
 
 tar_read(grazing_figure)
@@ -51,11 +51,18 @@ tar_read(grazing_figure)
 ```{r}
 #| label: tbl-single-traits
 #| echo: false
-#| tbl-cap: Model output from single trait models
+#| tbl-cap: The main and interactive linear model effects for the warming by nitrogen and warming by grazing models. Each model included effects for warming (W), origin (O), model-specific drivers—nitrogen (N) and grazing (G)—and an interaction term for pair-wise interactions. Significant effects (p < 0.05) are bolded.
 
 tar_load(trait_anovas)
 
-trait_anovas |> 
+df <- trait_anovas |> 
+    mutate(Traits = case_when(Traits == "Plant~height~(cm)" ~ "Plant height (cm)",
+                              Traits == "Leaf~dry~mass~(g)" ~ "Leaf dry mass (cm)",
+                              Traits == "Leaf~area~(cm^2)" ~ "Leaf area (cm<sup>2</sup>)",
+                              Traits == "Leaf~thickness~(mm)" ~ "Leaf thickness (mm)",
+                              Traits == "SLA~(cm^2*g^{-1})" ~ "SLA (cm<sup>2</sup> g<sup>-1</sup>)",
+                              TRUE ~ Traits),
+           Traits = purrr::map(Traits, gt::html)) |> 
   group_by(Traits) |> 
   gt() |> 
   tab_spanner(
@@ -66,6 +73,11 @@ trait_anovas |>
       label = md('Warming x grazing'),
       columns = c('Term_g', 'Sum of Square_g', 'df_g', 'F_g', 'P_g')
     ) |> 
+  tab_style(
+        style = cell_borders(sides = "left", color = "white", weight = px(15), style = "solid"),
+        locations = cells_body(
+          columns = "Term_g")
+      ) |> 
   tab_style(
     style = list(
       cell_text(weight = "bold")
@@ -90,12 +102,12 @@ trait_anovas |>
     P_g = "P"
   ) |> 
   tab_options(
-  table.font.size = 12,
+  table.font.size = 10,
   data_row.padding = gt::px(1)
   )
 
-
-
+df
+#df %>% gtsave(filename = "Table_1.png")
 ```
 
 ### Multivariate analysis
