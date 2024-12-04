@@ -1,6 +1,16 @@
 # analysis plan
 analysis_plan <- list(
 
+  # slope and aspect
+  tar_target(
+    name = slope_aspect,
+    command = slope_raw |>
+      summarise(se_slope = sd(slope)/sqrt(n()),
+                slope = mean(slope),
+                se_aspect = sd(aspect)/sqrt(n()),
+                aspect = mean(aspect))
+  ),
+
   # SINGLE TRAIT ANALYIS
 
   # trait analysis (warming and grazing)

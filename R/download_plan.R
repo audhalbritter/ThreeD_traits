@@ -21,10 +21,26 @@ download_plan <- list(
     format = "file"
   ),
 
+  # slope and aspect
+  tar_target(
+    name = slope_download,
+    command =  get_file(node = "pk4bg",
+                        file = "Three-D_slope_aspect_soil_depth_2019.csv",
+                        path = "data",
+                        remote_path = "Site"),
+    format = "file"
+  ),
+
   # meta data
   tar_target(
     name = metaTurfID,
     command = create_threed_meta_data()
+  ),
+
+  # cover
+  tar_target(
+    name = slope_raw,
+    command = read_csv(slope_download)
   ),
 
   # cover
