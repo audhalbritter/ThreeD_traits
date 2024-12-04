@@ -83,6 +83,10 @@ clean_traits <- function(trait_raw){
 
     # remove wet mass, correlated with dry mass
     filter(trait != "wet_mass_g") |>
+    # merge species like for cover data
+    mutate(species = case_when(str_detect(species, "Antennaria") ~ "Antennaria sp",
+                               str_detect(species, "Pyrola") ~ "Pyrola sp",
+                               TRUE ~ species)) |>
     # log transform size traits
     mutate(
       value_trans = if_else(
