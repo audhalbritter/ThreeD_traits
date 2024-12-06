@@ -52,7 +52,8 @@ download_plan <- list(
       if (file.exists(zip) & file.exists(unzip)) {
         #Delete file if it exists
         file.remove(zip)
-        }
+      }
+      unzip
       },
     format = "file"
   ),
