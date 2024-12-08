@@ -82,13 +82,20 @@ make_pca_plot <- function(trait_pca, col2){
   e_B1 <- eigenvals(trait_pca[[3]])/sum(eigenvals(trait_pca[[3]]))
 
   trait_pca[[1]] |>
-    ggplot(aes(x = PC1, y = PC2, colour = warming, shape = origSiteID, linetype = origSiteID)) +
-    geom_convexhull(aes(fill = warming), alpha = 0.3) +
-    geom_point(size = 2) +
+    mutate(site_graze = paste(origSiteID, grazing, sep = "_"),
+           site_graze = case_match(site_graze,
+                                   "Alpine_Grazed" ~ "Alpine grazed",
+                                   "Alpine_Ungrazed" ~ "Alpine ungrazed",
+                                   "Sub-alpine_Grazed" ~ "Sub-alpine grazed",
+                                   "Sub-alpine_Ungrazed" ~ "Sub-alpine ungrazed",
+                                   .default = site_graze)) |>
+    ggplot(aes(x = PC1, y = PC2, colour = warming, linetype = origSiteID, fill = warming)) +
+    geom_convexhull(alpha = 0.2) +
+    geom_point(aes(shape = site_graze), size = 2) +
     geom_segment(data = trait_pca[[2]],
                  aes(x = 0, y = 0, xend = PC1, yend = PC2),
                  arrow = arrow(length = unit(0.2, "cm")),
-                 inherit.aes = FALSE, colour = "grey70") +
+                 inherit.aes = FALSE, colour = "grey60") +
     geom_text(data = trait_pca[[2]] |>
                 mutate(figure_names = case_match(figure_names,
                                                  "Plant~height~(cm)" ~ "Height~(cm)",
@@ -100,7 +107,7 @@ make_pca_plot <- function(trait_pca, col2){
                                        label == "leaf~dry~mass~(g)" ~ -0.1,
                                        label == "sla_cm2_g" ~ -1.1,
                                        TRUE ~ PC2),
-                       PC1 = case_when(label == "leaf_thickness_mm_log" ~ 0.75,
+                       PC1 = case_when(label == "leaf_thickness_mm_log" ~ 0.7,
                                        TRUE ~ PC1)),
               aes(x = PC1 + 0.3, y = PC2 + 0.2, label = figure_names),
               size = 3,
@@ -109,13 +116,63 @@ make_pca_plot <- function(trait_pca, col2){
     coord_equal() +
     scale_fill_manual(name = "Warming", values = c("grey40", col2[2])) +
     scale_colour_manual(name = "Warming", values = c("grey40", col2[2])) +
-    scale_shape_manual(name = "Origin community", values = c(16, 1)) +
-    scale_linetype_manual(name = "Origin community", values = c("solid", "dashed")) +
+    scale_shape_manual(name = "Origin and grazing", values = c(17, 2, 16, 1)) +
+    scale_linetype_manual(name = "Origin and grazing", values = c("solid", "dashed", "solid", "dashed")) +
     labs(x = glue("PCA1 ({round(e_B1[1] * 100, 1)}%)"),
          y = glue("PCA2 ({round(e_B1[2] * 100, 1)}%)")) +
     theme_bw()
 
 }
+
+
+make_full_pca_plot <- function(trait_pca, col2){
+
+  e_B1 <- eigenvals(trait_pca[[3]])/sum(eigenvals(trait_pca[[3]]))
+
+  trait_pca[[1]] |>
+    mutate(site_graze = paste(origSiteID, grazing, sep = "_"),
+           site_graze = case_match(site_graze,
+                                   "Alpine_Grazed" ~ "Alpine grazed",
+                                   "Alpine_Ungrazed" ~ "Alpine ungrazed",
+                                   "Sub-alpine_Grazed" ~ "Sub-alpine grazed",
+                                   "Sub-alpine_Ungrazed" ~ "Sub-alpine ungrazed",
+                                   .default = site_graze)) |>
+    ggplot(aes(x = PC1, y = PC2, colour = warming, linetype = origSiteID, fill = warming)) +
+    geom_convexhull(alpha = 0.3) +
+    geom_point(aes(shape = site_graze, size = Namount_kg_ha_y)) +
+    geom_segment(data = trait_pca[[2]],
+                 aes(x = 0, y = 0, xend = PC1, yend = PC2),
+                 arrow = arrow(length = unit(0.2, "cm")),
+                 inherit.aes = FALSE, colour = "grey60") +
+    geom_text(data = trait_pca[[2]] |>
+                mutate(figure_names = case_match(figure_names,
+                                                 "Plant~height~(cm)" ~ "Height~(cm)",
+                                                 "Leaf~dry~mass~(g)" ~ "Dry~mass~(g)",
+                                                 "Leaf~area~(cm^2)" ~ "Area~(cm^2)",
+                                                 "Leaf~thickness~(mm)" ~ "Thickness~(mm)",
+                                                 .default = figure_names),
+                       PC2 = case_when(label == "leaf_area_cm2_log" ~ -0.2,
+                                       label == "leaf~dry~mass~(g)" ~ -0.1,
+                                       label == "sla_cm2_g" ~ -1.1,
+                                       TRUE ~ PC2),
+                       PC1 = case_when(label == "leaf_thickness_mm_log" ~ 0.7,
+                                       TRUE ~ PC1)),
+              aes(x = PC1 + 0.3, y = PC2 + 0.2, label = figure_names),
+              size = 3,
+              inherit.aes = FALSE,
+              show.legend = FALSE, parse = TRUE) +
+    coord_equal() +
+    guides(size = guide_legend(title = "Nitrogen addition")) +
+    scale_fill_manual(name = "Warming", values = c("grey40", col2[2])) +
+    scale_colour_manual(name = "Warming", values = c("grey40", col2[2])) +
+    scale_shape_manual(name = "Origin and grazing", values = c(17, 2, 16, 1)) +
+    scale_linetype_manual(name = "Origin and grazing", values = c("solid", "dashed", "solid", "dashed")) +
+    labs(x = glue("PCA1 ({round(e_B1[1] * 100, 1)}%)"),
+         y = glue("PCA2 ({round(e_B1[2] * 100, 1)}%)")) +
+    theme_bw()
+
+}
+
 
 
 

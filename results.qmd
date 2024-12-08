@@ -21,6 +21,7 @@ library(ggplot2)
 library(ggcorrplot)
 library(gt)
 library(gtExtras)
+library(broom)
 
 ```
 
@@ -110,6 +111,68 @@ df
 #df %>% gtsave(filename = "Table_1.png")
 ```
 
+```{r}
+#| label: tbl-single-traits_new
+#| echo: false
+#| tbl-cap: The main and interactive linear model effects for the warming by nitrogen and warming by grazing models. Each model included effects for warming (W), origin (O), model-specific drivers—nitrogen (N) and grazing (G)—and an interaction term for pair-wise interactions. Significant effects (p < 0.05) are bolded.
+
+tar_load(trait_prediction)
+
+df <- trait_prediction |>
+  ungroup() |>
+  select(figure_names, anova_tidy) |> 
+  unnest(anova_tidy) |> 
+  mutate(sumsq = round(sumsq, 2),
+               df = round(df, 2),
+               statistic = round(statistic, 2),
+               p.value = round(p.value, 3)) |>
+  mutate(term = case_when(str_detect(term, "warming:Nitrogen_log") ~ "WxN",
+                            str_detect(term, "Nitrogen_log:origSiteID") ~ "NxO",
+                            str_detect(term, "warming:origSiteID") ~ "WxO",
+                            str_detect(term, "warming:grazing") ~ "WxG",
+                            str_detect(term, "origSiteID:grazing") ~ "GxO",
+                            str_detect(term, "origSiteID") ~ "O",
+                            str_detect(term, "Nitrogen_log") ~ "N",
+                            str_detect(term, "warming") ~ "W",
+                            str_detect(term, "grazing") ~ "G",
+                            TRUE ~ term)) |>
+  rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value") |> 
+  select(Traits, Term, `Sum of Square`, df, 'F', P) |>
+  arrange(Traits) |> 
+  mutate(Traits = case_when(Traits == "Plant~height~(cm)" ~ "Plant height (cm)",
+                              Traits == "Leaf~dry~mass~(g)" ~ "Leaf dry mass (cm)",
+                              Traits == "Leaf~area~(cm^2)" ~ "Leaf area (cm<sup>2</sup>)",
+                              Traits == "Leaf~thickness~(mm)" ~ "Leaf thickness (mm)",
+                              Traits == "SLA~(cm^2*g^{-1})" ~ "SLA (cm<sup>2</sup> g<sup>-1</sup>)",
+                              Traits == "LDMC~(gg^{-1})" ~ "LDMC (gg<sup>-1</sup>)",
+                              TRUE ~ Traits),
+           Traits = purrr::map(Traits, gt::html))
+
+df2 <- df |> 
+  group_by(Traits) |> 
+  gt() |> 
+  tab_style(
+        style = cell_borders(sides = "left", color = "white", weight = px(15), style = "solid"),
+        locations = cells_body(
+          columns = "Term")
+      ) |> 
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c("Term", 'Sum of Square', df, 'F', P),
+      rows = P <= 0.05)
+    )|> 
+  tab_options(
+  table.font.size = 10,
+  data_row.padding = gt::px(1)
+  )
+
+df2
+#df2 %>% gtsave(filename = "Table_1.png")
+```
+
 ### Multivariate analysis
 
 ```{r}
@@ -171,5 +234,38 @@ Species list at all the sites along the elevational gradient. The species are so
 #| tbl-cap: List of species at all three sites, sorted by cover and functional group.
 
 tar_read(species_list_out)
+
+```
+
+
+### PCA output
+
+```{r}
+#| label: tbl-pca
+#| echo: false
+#| tbl-cap: PCA output.
+
+tar_read(trait_pca)
+
+pca_out <- trait_pca[[4]] |> 
+  tidy() |> 
+  mutate(term = case_when(str_detect(term, "warming:Nitrogen_log") ~ "WxN",
+                            str_detect(term, "Nitrogen_log:origSiteID") ~ "NxO",
+                            str_detect(term, "warming:origSiteID") ~ "WxO",
+                            str_detect(term, "warming:grazing") ~ "WxG",
+                            str_detect(term, "origSiteID:grazing") ~ "GxO",
+                            str_detect(term, "origSiteID") ~ "O",
+                            str_detect(term, "Nitrogen_log") ~ "N",
+                            str_detect(term, "warming") ~ "W",
+                            str_detect(term, "grazing") ~ "G",
+                            TRUE ~ term),
+         SumOfSqs = round(SumOfSqs, 2),
+         R2 = round(R2, 2),
+         statistic = round(statistic, 2)) |> 
+  rename(Term = term, "Sum of squares" = SumOfSqs, Statistic = statistic, "P value" = p.value) |> 
+  gt()
+
+pca_out
+pca_out %>% gtsave(filename = "Table_SI1.png")
 
 ```
