@@ -40,7 +40,6 @@ make_trait_null_impute <- function(community, traits){
   #prepare trait data without intraspecific variation
   trait.null <- trait %>%
     select(siteID, blockID, turfID, warming, grazing, Nlevel, Namount_kg_ha_y, treatment, species, trait_trans, value_trans) %>%
-    # do we want to have fixed traits per gradient or across all the gradients???
     group_by(species, trait_trans) %>%
     summarise(value_trans = mean(value_trans)) %>%
     right_join(trait, by = c("species", "trait_trans")) %>%
