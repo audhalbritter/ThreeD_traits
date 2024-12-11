@@ -237,7 +237,6 @@ tar_read(species_list_out)
 
 ```
 
-
 ### PCA output
 
 ```{r}
@@ -268,4 +267,78 @@ pca_out <- trait_pca[[4]] |>
 pca_out
 pca_out %>% gtsave(filename = "Table_SI1.png")
 
+```
+
+### ITV output
+
+```{r}
+#| label: tbl-itv
+#| echo: false
+#| tbl-cap: Proportion contribution ITV, turnover, ....
+
+tar_load(variance_part)
+
+tab <- variance_part |>
+  select(trait_fancy, process, Term = term, pr = proportion, pv = pvalue) |>
+  pivot_wider(names_from = process, values_from = c(pr, pv)) |> 
+  select(trait_fancy, Term, pr_total, pv_total, pr_turnover, pv_turnover, pr_intraspecific, pv_intraspecific, pr_covariation) |> 
+  group_by(trait_fancy) |> 
+  gt() |> 
+  fmt_number(columns = everything(),
+  decimals = 3) |> 
+  tab_spanner(
+    label = md("**Total**"),
+    columns = c(pr_total, pv_total)
+  ) |> 
+  tab_spanner(
+    label = md("**Turnover**"),
+    columns = c(pr_turnover, pv_turnover)
+  ) |> 
+  tab_spanner(
+    label = md("**ITV**"),
+    columns = c(pr_intraspecific, pv_intraspecific)
+  ) |> 
+  tab_spanner(
+    label = md("**Covariation**"),
+    columns = c(pr_covariation)
+  ) |> 
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(Term, pr_total, pv_total),
+      rows = pv_total <= 0.05)
+    ) |> 
+    tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(pr_turnover, pv_turnover),
+      rows = pv_total <= 0.05)
+    ) |> 
+      tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(pr_intraspecific, pv_intraspecific),
+      rows = pv_total <= 0.05)
+    ) |> 
+  cols_label(
+    Term = md("**Term**"),
+    pr_total = md("**Proportion**"),
+    pv_total = md("**P value**"),
+    pr_turnover = md("**Proportion**"),
+    pv_turnover = md("**P value**"),
+    pr_intraspecific = md("**Proportion**"),
+    pv_intraspecific = md("**P value**"),
+    pr_covariation = md("**Proportion**")
+  ) |> 
+  tab_options(
+  table.font.size = 10,
+  data_row.padding = gt::px(1)
+  )
+#tab %>% gtsave(filename = "Table_2_itv_output.png")
 ```
