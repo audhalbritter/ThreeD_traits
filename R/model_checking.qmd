@@ -22,6 +22,7 @@ library(tarchetypes)
 ```{r}
 #| label: wg-trait-check
 #| echo: false
+#| eval: false
 #| results: asis
 
 tar_load(wg_trait_models)
@@ -36,17 +37,36 @@ wg_trait_models |>
 })
 ```
 
-
 ### Warming x nitrogen addition
 
 ```{r}
 #| label: trait-check
 #| echo: false
+#| eval: false
 #| results: asis
 
 tar_load(trait_model)
 
 trait_model |> 
+  mutate(check = map(model, check_model)) |> 
+  select(figure_names, names, check) |> 
+  pwalk(.f = function(figure_names, names, check, ...){
+  cat(paste("##", figure_names, " - ", names, "\n"))
+  print(check)
+  cat("\n")
+})
+```
+
+### Full model
+
+```{r}
+#| label: full-model-check
+#| echo: false
+#| results: asis
+
+tar_load(trait_prediction)
+
+trait_pediction |> 
   mutate(check = map(model, check_model)) |> 
   select(figure_names, names, check) |> 
   pwalk(.f = function(figure_names, names, check, ...){
