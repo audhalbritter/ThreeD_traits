@@ -136,7 +136,7 @@ make_ITV_plot <- function(variance_part){
   }
 
 
-itv_by_origin <- function(trait_mean){
+make_ITV_analysis_origin <- function(trait_mean){
 
   trait_long <- trait_mean |>
     select(-var, -skew, -kurt) |>
@@ -157,43 +157,53 @@ itv_by_origin <- function(trait_mean){
     })) %>%
     unnest(estimate)
 
+}
+
+
+make_ITV_proportions_origin <- function(itv_output){
+
   variance_part <- itv_output %>%
     # select important columns: sumsq = SS
-    select(class, trait_trans, mean, term, sumsq) %>%
+    select(class, trait_trans, mean, term, ss = sumsq, p = p.value) %>%
     # make wide table
-    pivot_wider(names_from = mean, values_from = sumsq) %>%
+    pivot_wider(names_from = mean, values_from = c(ss, p)) %>%
     # rename columns
-    rename("total_ss" = specific_mean, "turnover_ss" = fixed_mean, "intraspecific_ss" = itv_mean) %>%
+    # rename columns
+    rename("total_ss" = ss_specific_mean, "turnover_ss" = ss_fixed_mean, "intraspecific_ss" = ss_itv_mean,
+           total_pval = p_specific_mean, turnover_pval = p_fixed_mean, intraspecific_pval = p_itv_mean) %>%
     # calculate covariation SS
-    mutate(covariation_ss = total_ss- turnover_ss - intraspecific_ss,
+    mutate(covariation_ss = total_ss - turnover_ss - intraspecific_ss,
            # sum of variation ss
            sum_ss = sum(total_ss)) |>
 
     # calculate proportion explained variation (divide ss by sum_ss)
-    mutate(total_p = total_ss/sum_ss,
-           turnover_p = turnover_ss/sum_ss,
-           intraspecific_p = intraspecific_ss/sum_ss,
-           covariation_p = covariation_ss/sum_ss) %>%
+    mutate(total_prop = total_ss/sum_ss,
+           turnover_prop = turnover_ss/sum_ss,
+           intraspecific_prop = intraspecific_ss/sum_ss,
+           covariation_prop = covariation_ss/sum_ss) %>%
     select(-sum_ss) |>
 
     # make long table
-    pivot_longer(cols = c(total_ss:covariation_p), names_to = c("process", "variable"), names_sep = "_",values_to = "value") |>
-    mutate(variable = recode(variable, "ss" = "sumsq", "p" = "proportion")) |>
+    pivot_longer(cols = c(total_ss:covariation_prop), names_to = c("process", "variable"), names_sep = "_",values_to = "value") |>
+    mutate(variable = recode(variable, "ss" = "sumsq", "pval" = "pvalue", "prop" = "proportion")) |>
     pivot_wider(names_from = variable, values_from = value) |>
+
+    # prettify
     ungroup() %>%
     fancy_trait_name_dictionary(.) |>
     mutate(term = case_when(term == "warming" ~ "W",
                             term == "nitrogen_fct" ~ "N",
-                            term == "origSiteID" ~ "O",
                             term == "grazing" ~ "G",
                             term == "warming:nitrogen_fct" ~ "WxN",
-                            term == "warming:origSiteID" ~ "WxO",
-                            term == "nitrogen_fct:origSiteID" ~ "NxO",
                             term == "warming:grazing" ~ "WxG",
-                            term == "origSiteID:grazing" ~ "GxO",
                             TRUE ~ term),
-           term = factor(term, levels = c("W", "N", "G", "O", "WxN", "WxG", "WxO", "NxO", "GxO", "Residuals")))
+           term = factor(term, levels = c("W", "N", "G", "WxN", "WxG", "Residuals")))
 
+}
+
+
+
+make_ITV_plot_origin <- function(variance_part){
 
   total <- variance_part |>
     filter(process %in% c("intraspecific", "turnover")) |>
@@ -222,7 +232,7 @@ itv_by_origin <- function(trait_mean){
   traits <- variance_part |>
     filter(process %in% c("intraspecific", "turnover")) |>
     #bind_rows(total) |>
-    mutate(term = factor(term, levels = c("W", "N", "G", "O", "WxN", "WxO", "NxO", "WxG", "GxO", "Residuals"))) |>
+    mutate(term = factor(term, levels = c("W", "N", "G", "WxN", "WxG", "Residuals"))) |>
     ggplot(aes(x = figure_names, y = proportion)) +
     geom_col(aes(fill = process)) +
     geom_point(data = variance_part |>
