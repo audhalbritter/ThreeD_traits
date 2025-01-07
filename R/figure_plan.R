@@ -26,7 +26,7 @@ figure_plan <- list(
 
   tar_target(
     name = itv_figure,
-    command = make_ITV_plot(variance_part)
+    command = make_ITV_plot_origin(variance_part)
   )
 
   # multivariate trait pca

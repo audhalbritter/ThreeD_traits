@@ -135,18 +135,14 @@ tar_target(
 
 tar_target(
   name = itv_output,
-  command = make_ITV_analysis(trait_mean)
+  command = make_ITV_analysis_origin(trait_mean)
 ),
 
 tar_target(
   name = variance_part,
-  command = make_ITV_proportions(itv_output)
-),
-
-tar_target(
-  name = itv_origin_output,
-  command = itv_by_origin(trait_mean)
+  command = make_ITV_proportions_origin(itv_output)
 )
+
 
 
   # # check models
