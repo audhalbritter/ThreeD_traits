@@ -151,7 +151,7 @@ si_plan <- list(
       filter(!is.na(cover)) |>
       pivot_wider(names_from = siteID, values_from = cover) |>
       arrange(functional_group, species) |>
-      select("Functional Group" = functional_group, Species = species, dplyr::everything())
+      select("Functional Group" = functional_group, Species = species, Boreal, `Sub-alpine`, Alpine)
 
   ),
 
