@@ -4,10 +4,8 @@
 # turnover <- const.avg <- mean_noitv (global mean)
 # intraspecific <- specific.avg - const.avg
 
-#tar_load(trait_mean)
 
-
-
+# Across all treatments
 make_ITV_analysis <- function(trait_mean){
 
   trait_long <- trait_mean |>
@@ -99,7 +97,7 @@ make_ITV_plot <- function(variance_part){
     labs(x = "",
          y = "Proportion variance explained",
          tag = "a)") +
-    scale_fill_manual(values = c("#0072B2", "#E69F00")) +
+    scale_fill_manual(values = c("#005BBB", "#FFD500")) +
     scale_x_discrete(labels = parse(text = levels(variance_part$figure_names))) +
     facet_wrap(~ term, labeller = label_parsed) +
     theme_bw() +
@@ -119,7 +117,7 @@ make_ITV_plot <- function(variance_part){
     labs(x = "",
          y = "Proportion variance explained",
          tag = "b)") +
-    scale_fill_manual(values = c("#0072B2", "#E69F00")) +
+    scale_fill_manual(values = c("#005BBB", "#FFD500")) +
     scale_x_discrete(labels = parse(text = levels(variance_part$figure_names))) +
     facet_wrap(~ term, labeller = label_parsed, ncol = 3) +
     theme_bw() +
@@ -136,6 +134,7 @@ make_ITV_plot <- function(variance_part){
   }
 
 
+# By origin and for each treatment
 make_ITV_analysis_origin <- function(trait_mean){
 
   trait_long <- trait_mean |>
@@ -214,7 +213,7 @@ make_ITV_plot_origin <- function(variance_part){
     geom_col(aes(fill = process)) +
     geom_point(data = variance_part |>
                  filter(process %in% c("total")) |>
-                 group_by(class, trait_trans, trait_fancy, figure_names, process) |>
+                 group_by(class, origSiteID, trait_trans, trait_fancy, figure_names, process) |>
                  summarise(proportion = sum(proportion)) |>
                  mutate(term = "Total"),
                aes(x = figure_names, y = proportion),
@@ -223,7 +222,7 @@ make_ITV_plot_origin <- function(variance_part){
     labs(x = "",
          y = "Proportion variance explained",
          tag = "a)") +
-    scale_fill_manual(values = c("#0072B2", "#E69F00")) +
+    scale_fill_manual(values = c("#005BBB", "#FFD500")) +
     scale_x_discrete(labels = parse(text = levels(variance_part$figure_names))) +
     facet_wrap(~ origSiteID, labeller = label_parsed) +
     theme_bw() +
@@ -243,7 +242,7 @@ make_ITV_plot_origin <- function(variance_part){
     labs(x = "",
          y = "Proportion variance explained",
          tag = "b)") +
-    scale_fill_manual(values = c("#0072B2", "#E69F00")) +
+    scale_fill_manual(values = c("#005BBB", "#FFD500")) +
     scale_x_discrete(labels = parse(text = levels(variance_part$figure_names))) +
     facet_grid(origSiteID ~ term, labeller = label_parsed) +
     theme_bw() +
