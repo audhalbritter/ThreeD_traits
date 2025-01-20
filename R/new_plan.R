@@ -6,6 +6,20 @@ new_plan <- list(
     command = make_trait_impute(community, traits)
   ),
 
+  # trait imputation coverage
+  tar_target(
+    name = trait_coverage,
+    command = fortify_filled_trait(trait_impute) |>
+      ungroup() |>
+      #filter(Trait == "CN_ratio") |>
+      complete(.id, level, trait_trans, fill = list(s = 0)) |>
+      filter(level == "turfID") |>
+      group_by(trait_trans) |>
+      # prob = 0.25 gives 75% of the plots
+      # also run prob = 0.5 for 50% of the plots
+      summarise(q = quantile(s, prob = 0.25))
+  ),
+
   # trait impute noitv
   tar_target(
     name = trait_null_impute,
@@ -158,7 +172,7 @@ new_plan <- list(
     name = trait_WG_figure,
     command = {
 
-      col1 <- habitat_palette
+      col1 <- grazing_palette
       col2 <- warming_palette
 
       pred <- trait_output |>
@@ -172,8 +186,9 @@ new_plan <- list(
         select(trait_trans:mean) |>
         mutate(mean = if_else(figure_names == "Leaf~thickness~(mm)", exp(mean), mean)) |>
         mutate(figure_names = factor(figure_names,
-                                     levels = c("Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})")),
-               origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
+                                     levels = c("Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})"))#,
+               #origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine"))
+               )
 
 
       figure_text <- text |>
@@ -218,8 +233,9 @@ new_plan <- list(
         filter(figure_names %in% c("SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})")) |>
         select(trait_trans:mean) |>
         mutate(figure_names = factor(figure_names,
-                                     levels = c("SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})")),
-               origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
+                                     levels = c("SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})"))#,
+               #origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine"))
+               )
 
 
       figure_text2 <- text |>
