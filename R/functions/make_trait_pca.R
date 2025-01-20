@@ -117,7 +117,11 @@ make_pca_plot <- function(trait_pca, col2){
     scale_fill_manual(name = "Warming", values = c("grey40", col2[2])) +
     scale_colour_manual(name = "Warming", values = c("grey40", col2[2])) +
     scale_shape_manual(name = "Origin and grazing", values = c(17, 2, 16, 1)) +
-    scale_linetype_manual(name = "Origin and grazing", values = c("solid", "dashed", "solid", "dashed")) +
+    #scale_linetype_manual(name = "Origin and grazing", values = c("solid", "dashed", "solid", "dashed")) +
+    scale_linetype_manual(
+      "Origin", values = c("Alpine" = "solid", "Sub-alpine" = "dashed"),
+      guide = guide_legend(override.aes = list(colour = c("grey40", "grey40")))
+    ) +
     labs(x = glue("PCA1 ({round(e_B1[1] * 100, 1)}%)"),
          y = glue("PCA2 ({round(e_B1[2] * 100, 1)}%)")) +
     theme_bw()
@@ -166,7 +170,10 @@ make_full_pca_plot <- function(trait_pca, col2){
     scale_fill_manual(name = "Warming", values = c("grey40", col2[2])) +
     scale_colour_manual(name = "Warming", values = c("grey40", col2[2])) +
     scale_shape_manual(name = "Origin and grazing", values = c(17, 2, 16, 1)) +
-    scale_linetype_manual(name = "Origin and grazing", values = c("solid", "dashed", "solid", "dashed")) +
+    scale_linetype_manual(
+      "Origin", values = c("Alpine" = "solid", "Sub-alpine" = "dashed"),
+      guide = guide_legend(override.aes = list(colour = c("grey40", "grey40")))
+    ) +
     labs(x = glue("PCA1 ({round(e_B1[1] * 100, 1)}%)"),
          y = glue("PCA2 ({round(e_B1[2] * 100, 1)}%)")) +
     theme_bw()
