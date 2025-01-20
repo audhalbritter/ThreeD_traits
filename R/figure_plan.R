@@ -9,9 +9,10 @@ figure_plan <- list(
     ),
 
   tar_target(
-    name = habitat_palette,
-    command = c("#E69F00", "#56B4E9")
+    name = grazing_palette,
+    command = c("seagreen4", "seagreen2")
   ),
+
 
   # trait means
   tar_target(
@@ -21,7 +22,7 @@ figure_plan <- list(
 
   tar_target(
     name = grazing_figure,
-    command = make_grazing_figure(g_trait_models, g_trait_anova, col1 = habitat_palette, col2 = warming_palette)
+    command = make_grazing_figure(g_trait_models, g_trait_anova, col1 = grazing_palette, col2 = warming_palette)
   ),
 
   tar_target(
