@@ -62,7 +62,7 @@ df <- trait_anovas |>
                               Traits == "Leaf~dry~mass~(g)" ~ "Leaf dry mass (cm)",
                               Traits == "Leaf~area~(cm^2)" ~ "Leaf area (cm<sup>2</sup>)",
                               Traits == "Leaf~thickness~(mm)" ~ "Leaf thickness (mm)",
-                              Traits == "SLA~(cm^2*g^{-1})" ~ "SLA (cm<sup>2</sup> g<sup>-1</sup>)",
+                              Traits == "SLA~(cm^2*g^{-1})" ~ "SLA (cm<sup>2</sup>g<sup>-1</sup>)",
                               TRUE ~ Traits),
            Traits = purrr::map(Traits, gt::html)) |> 
   group_by(Traits) |> 
@@ -160,7 +160,7 @@ df <- trait_prediction |>
 #   table.font.size = 10,
 #   data_row.padding = gt::px(1)
 #   )
-
+# 
 # df2
 #df2 %>% gtsave(filename = "Table_1.png")
 
@@ -229,7 +229,7 @@ df |>
       case_match(
         y,
         "Leaf~thickness~(mm)" ~ html("Leaf thickness (mm)"),
-        "SLA~(cm^2*g^{-1})" ~ html("SLA (cm<sup>2</sup> g<sup>-1</sup>)"),
+        "SLA~(cm^2*g^{-1})" ~ html("SLA (cm<sup>2</sup>g<sup>-1</sup>)"),
         "LDMC~(gg^{-1})" ~ html("LDMC (gg<sup>-1</sup>))"),
         .default = html(y)
       )
@@ -256,9 +256,9 @@ df |>
 
 ```
 
-<!-- ```{r} -->
-<!-- knitr::knit_exit() -->
-<!-- ``` -->
+```{r}
+knitr::knit_exit()
+```
 
 ### Multivariate analysis
 
@@ -396,7 +396,7 @@ tab <- dat |>
         "Leaf~dry~mass~(g)" ~ html("Leaf dry mass (g)"),
         "Leaf~area~(cm^2)" ~ html("Leaf area (cm<sup>2</sup>)"),
         "Leaf~thickness~(mm)" ~ html("Leaf thickness (mm)"),
-        "SLA~(cm^2*g^{-1})" ~ html("SLA (cm<sup>2</sup> g<sup>-1</sup>)"),
+        "SLA~(cm^2*g^{-1})" ~ html("SLA (cm<sup>2</sup>g<sup>-1</sup>)"),
         "LDMC~(gg^{-1})" ~ html("LDMC (gg<sup>-1</sup>))"),
         .default = html(y)
       )
