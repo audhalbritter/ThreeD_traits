@@ -1,0 +1,37 @@
+---
+title: "Model checking"
+format: html
+editor: visual
+---
+
+## Checking model assumptions for single trait models
+
+```{r}
+#| label: set-up
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(performance)
+library(targets)
+library(tarchetypes)
+```
+
+### Trait model
+
+```{r}
+#| label: full-model-check
+#| echo: false
+#| results: asis
+
+tar_load(trait_prediction)
+
+trait_prediction |> 
+  mutate(check = map(model, check_model)) |> 
+  select(figure_names, names, check) |> 
+  pwalk(.f = function(figure_names, names, check, ...){
+  cat(paste("##", figure_names, " - ", names, "\n"))
+  print(check)
+  cat("\n")
+})
+```
