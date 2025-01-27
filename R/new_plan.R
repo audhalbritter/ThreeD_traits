@@ -204,7 +204,7 @@ new_plan <- list(
 
       warming <- dat |>
         ggplot(aes(x = origSiteID, y = mean, fill = warming, colour = warming)) +
-        geom_violin() +
+        geom_violin(draw_quantiles = c(0.5), colour = "grey20") +
         # text
         geom_text(data = pred |>
                     distinct(figure_names, origSiteID, warming, grazing) |>
@@ -251,7 +251,7 @@ new_plan <- list(
       # Grazing only model
       grazing <- dat2 |>
         ggplot(aes(x = origSiteID, y = mean, fill = grazing, colour = grazing)) +
-        geom_violin() +
+        geom_violin(draw_quantiles = c(0.5), colour = "grey20") +
         # text
         geom_text(data = pred2 |>
                     distinct(figure_names, origSiteID, warming, grazing) |>
