@@ -244,6 +244,7 @@ make_ITV_plot_origin <- function(variance_part){
          tag = "b)") +
     scale_fill_manual(values = c("#005BBB", "#FFD500")) +
     scale_x_discrete(labels = parse(text = levels(variance_part$figure_names))) +
+    scale_y_continuous(breaks = c(0, 0.3, 0.6)) +
     facet_grid(origSiteID ~ term, labeller = label_parsed) +
     theme_bw() +
     theme(legend.position = "top")
