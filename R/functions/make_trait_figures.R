@@ -124,7 +124,7 @@ make_grazing_figure <- function(g_trait_models, g_trait_anova, col1, col2){
             .id = "process") |>
     filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
     mutate(figure_names = factor(figure_names,
-                          levels = c("SLA~(cm^2*g^{-1})", "LDMC")),
+                          levels = c("SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})")),
     origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine"))) |>
     filter(process == "ITV")
 
@@ -135,7 +135,7 @@ make_grazing_figure <- function(g_trait_models, g_trait_anova, col1, col2){
     filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
     mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
     mutate(figure_names = factor(figure_names,
-                                levels = c("SLA~(cm^2*g^{-1})", "LDMC"))) |>
+                                levels = c("SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})"))) |>
     filter(process == "ITV")
 
 
@@ -215,7 +215,7 @@ make_GxW_figure <- function(g_trait_models, g_trait_anova, col1){
     select(trait_trans, figure_names, mean:.std.resid) |>
     filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
     mutate(figure_names = factor(figure_names,
-                                 levels = c("SLA~(cm^2*g^{-1})", "LDMC")),
+                                 levels = c("SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})")),
            origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
 
   text = g_trait_anova |>
@@ -224,7 +224,7 @@ make_GxW_figure <- function(g_trait_models, g_trait_anova, col1){
     filter(trait_trans %in% c("sla_cm2_g", "ldmc")) |>
     mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
     mutate(figure_names = factor(figure_names,
-                                 levels = c("SLA~(cm^2*g^{-1})", "LDMC")))
+                                 levels = c("SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})")))
 
   ggplot(pred, aes(x = grazing, y = mean, fill = warming)) +
     geom_boxplot() +
@@ -269,7 +269,7 @@ make_single_trait_appendix_figure <- function(g_trait_models, g_trait_anova, col
     unnest(prediction) |>
     select(trait_trans, figure_names, mean:.std.resid) |>
     mutate(figure_names = factor(figure_names,
-                                 levels = c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")),
+                                 levels = c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})")),
            origSiteID = factor(origSiteID, levels = c("Sub-alpine", "Alpine")))
 
   text = g_trait_anova |>
@@ -277,7 +277,7 @@ make_single_trait_appendix_figure <- function(g_trait_models, g_trait_anova, col
            p.value <= 0.05) |>
     mutate(x_var = Inf, y_var = -Inf, hjust_var = 1) |>
     mutate(figure_names = factor(figure_names,
-                                 levels = c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC")))
+                                 levels = c("Plant~height~(cm)", "Leaf~dry~mass~(g)", "Leaf~area~(cm^2)", "Leaf~thickness~(mm)", "SLA~(cm^2*g^{-1})", "LDMC~(gg^{-1})")))
 
 
   ggplot(pred, aes(x = warming, y = mean, fill = warming)) +

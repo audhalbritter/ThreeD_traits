@@ -52,6 +52,32 @@ make_prediction <- function(trait_model){
 
 }
 
+make_prediction_full <- function(full_models){
 
+  # make predictions for more data points
+  Namount_kg_ha_y = seq(from = 0, to = 150, by = 0.5)
+  Nitrogen_log = seq(from = 0, to = 5, by = 0.1)
+
+  full_models |>
+    ungroup() |>
+    mutate(result = map(model, tidy),
+           anova = map(model, car::Anova),
+           anova_tidy = map(anova, tidy),
+           # make new data
+           newdata = ifelse(names %in% c("log", "lognoITV"),
+                            # for log model
+                            map(.x = data, .f = ~. |>
+                                  distinct(warming, grazing, origSiteID) |>
+                                  crossing(Nitrogen_log)),
+                            # for linear and quadratic models
+                            map(.x = data, .f = ~. |>
+                                  distinct(warming, grazing, origSiteID) |>
+                                  crossing(Namount_kg_ha_y) |>
+                                  mutate(Nitrogen_log = log(Namount_kg_ha_y + 1)))
+           ),
+           # predict with newdata
+           prediction = map2(.x = model, .y = newdata, .f = predict, interval = "confidence"))
+
+}
 
 

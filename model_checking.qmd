@@ -17,36 +17,16 @@ library(targets)
 library(tarchetypes)
 ```
 
-### Warming x grazing
+### Trait model
 
 ```{r}
-#| label: wg-trait-check
+#| label: full-model-check
 #| echo: false
 #| results: asis
 
-tar_load(wg_trait_models)
+tar_load(trait_prediction)
 
-wg_trait_models |> 
-  mutate(check = map(model, check_model)) |> 
-  select(figure_names, check) |> 
-  pwalk(.f = function(figure_names, names, check, ...){
-  cat(paste("##", figure_names, "\n"))
-  print(check)
-  cat("\n")
-})
-```
-
-
-### Warming x nitrogen addition
-
-```{r}
-#| label: trait-check
-#| echo: false
-#| results: asis
-
-tar_load(trait_model)
-
-trait_model |> 
+trait_prediction |> 
   mutate(check = map(model, check_model)) |> 
   select(figure_names, names, check) |> 
   pwalk(.f = function(figure_names, names, check, ...){

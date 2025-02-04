@@ -1,6 +1,16 @@
 # analysis plan
 analysis_plan <- list(
 
+  # slope and aspect
+  tar_target(
+    name = slope_aspect,
+    command = slope_raw |>
+      summarise(se_slope = sd(slope)/sqrt(n()),
+                slope = mean(slope),
+                se_aspect = sd(aspect)/sqrt(n()),
+                aspect = mean(aspect))
+  ),
+
   # SINGLE TRAIT ANALYIS
 
   # trait analysis (warming and grazing)
@@ -125,27 +135,28 @@ tar_target(
 
 tar_target(
   name = itv_output,
-  command = make_ITV_analysis(g_trait_mean, n_trait_mean)
+  command = make_ITV_analysis_origin(trait_mean)
 ),
 
 tar_target(
-  name = itv_output2,
-  command = make_ITV2_analysis(g_trait_mean, n_trait_mean)
+  name = variance_part,
+  command = make_ITV_proportions_origin(itv_output)
 )
 
 
-#   # check models
-#   tar_quarto(name = model_check,
-#              path = "R/model_checking.qmd"),
+
+  # # check models
+  # tar_quarto(name = model_check,
+  #            path = "R/model_checking.qmd", quiet = FALSE)
 
 
   # MULTIVARIATE TRATI ANALYSIS
 
-#   tar_target(
-#     name = g_trait_pca,
-#     command = make_trait_pca(g_trait_mean)
-#   ),
-#
+  # tar_target(
+  #   name = trait_pca,
+  #   command = make_trait_pca(trait_mean)
+  # )
+
 #   tar_target(
 #     name = n_trait_pca,
 #     command = make_trait_pca(n_trait_mean)

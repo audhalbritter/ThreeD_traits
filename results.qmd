@@ -21,6 +21,7 @@ library(ggplot2)
 library(ggcorrplot)
 library(gt)
 library(gtExtras)
+library(broom)
 
 ```
 
@@ -51,6 +52,7 @@ tar_read(grazing_figure)
 ```{r}
 #| label: tbl-single-traits
 #| echo: false
+#| eval: false
 #| tbl-cap: The main and interactive linear model effects for the warming by nitrogen and warming by grazing models. Each model included effects for warming (W), origin (O), model-specific drivers—nitrogen (N) and grazing (G)—and an interaction term for pair-wise interactions. Significant effects (p < 0.05) are bolded.
 
 tar_load(trait_anovas)
@@ -60,7 +62,7 @@ df <- trait_anovas |>
                               Traits == "Leaf~dry~mass~(g)" ~ "Leaf dry mass (cm)",
                               Traits == "Leaf~area~(cm^2)" ~ "Leaf area (cm<sup>2</sup>)",
                               Traits == "Leaf~thickness~(mm)" ~ "Leaf thickness (mm)",
-                              Traits == "SLA~(cm^2*g^{-1})" ~ "SLA (cm<sup>2</sup> g<sup>-1</sup>)",
+                              Traits == "SLA~(cm^2*g^{-1})" ~ "SLA (cm<sup>2</sup>g<sup>-1</sup>)",
                               TRUE ~ Traits),
            Traits = purrr::map(Traits, gt::html)) |> 
   group_by(Traits) |> 
@@ -110,16 +112,163 @@ df
 #df %>% gtsave(filename = "Table_1.png")
 ```
 
+```{r}
+#| label: single-traits_stats
+#| echo: false
+
+tar_load(trait_prediction)
+
+df <- trait_prediction |>
+  ungroup() |>
+  select(figure_names, anova_tidy) |> 
+  unnest(anova_tidy) |> 
+  mutate(sumsq = round(sumsq, 2),
+               df = round(df, 2),
+               statistic = round(statistic, 2),
+               p.value = round(p.value, 3)) |>
+  mutate(term = case_when(str_detect(term, "warming:Nitrogen_log") ~ "WxN",
+                            str_detect(term, "Nitrogen_log:origSiteID") ~ "NxO",
+                            str_detect(term, "warming:origSiteID") ~ "WxO",
+                            str_detect(term, "warming:grazing") ~ "WxG",
+                            str_detect(term, "origSiteID:grazing") ~ "GxO",
+                            str_detect(term, "origSiteID") ~ "O",
+                            str_detect(term, "Nitrogen_log") ~ "N",
+                            str_detect(term, "warming") ~ "W",
+                            str_detect(term, "grazing") ~ "G",
+                            TRUE ~ term)) |>
+  rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value") |> 
+  select(Traits, Term, `Sum of Square`, df, 'F', P) |>
+  arrange(Traits)
+
+# df2 <- df |>
+#   group_by(Traits) |>
+#   gt() |>
+#   tab_style(
+#         style = cell_borders(sides = "left", color = "white", weight = px(15), style = "solid"),
+#         locations = cells_body(
+#           columns = "Term")
+#       ) |>
+#   tab_style(
+#     style = list(
+#       cell_text(weight = "bold")
+#       ),
+#     locations = cells_body(
+#       columns = c("Term", 'Sum of Square', df, 'F', P),
+#       rows = P <= 0.05)
+#     )|>
+#   tab_options(
+#   table.font.size = 10,
+#   data_row.padding = gt::px(1)
+#   )
+# 
+# df2
+#df2 %>% gtsave(filename = "Table_1.png")
+
+```
+
+```{r}
+#| label: tbl-label
+#| echo: false
+#| layout-ncol: 2
+#| tbl-cap: The main and interactive linear model effects for the warming by nitrogen and warming by grazing models. Each model included effects for warming (W), origin community (O), model-specific drivers—nitrogen (N) and grazing (G)—and an interaction term for pair-wise interactions. Significant effects (p < 0.05) are bolded. SLA is specific leaf area and LDMC is leaf dry matter content.
+
+
+library(knitr)
+
+# table on the left
+df |> 
+  slice(1:30) |> 
+  group_by(Traits) |> 
+  gt() |> 
+  text_transform(
+    locations = cells_row_groups(
+      groups = everything()
+    ),
+    fn = function(x){ 
+      map(x, \(y)
+      case_match(
+        y,
+        "Plant~height~(cm)" ~ html("Plant height (cm)"),
+        "Leaf~dry~mass~(g)" ~ html("Leaf dry mass (g)"),
+        "Leaf~area~(cm^2)" ~ html("Leaf area (cm<sup>2</sup>)"),
+        .default = html(y)
+      )
+      )
+    }
+  ) |> 
+  tab_style(
+        style = cell_borders(sides = "left", color = "white", weight = px(15), style = "solid"),
+        locations = cells_body(
+          columns = "Term")
+      ) |>
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c("Term", 'Sum of Square', df, 'F', P),
+      rows = P <= 0.05)
+    )|>
+  tab_options(
+  table.font.size = 12,
+  data_row.padding = gt::px(1)
+  )
+
+# table on the right
+#kable(head(cars))
+df |> 
+  slice(31:60) |> 
+  group_by(Traits) |> 
+  gt() |> 
+  text_transform(
+    locations = cells_row_groups(
+      groups = everything()
+    ),
+    fn = function(x){ 
+      map(x, \(y)
+      case_match(
+        y,
+        "Leaf~thickness~(mm)" ~ html("Leaf thickness (mm)"),
+        "SLA~(cm^2*g^{-1})" ~ html("SLA (cm<sup>2</sup>g<sup>-1</sup>)"),
+        "LDMC~(gg^{-1})" ~ html("LDMC (gg<sup>-1</sup>)"),
+        .default = html(y)
+      )
+      )
+    }
+  ) |> 
+  tab_style(
+        style = cell_borders(sides = "left", color = "white", weight = px(15), style = "solid"),
+        locations = cells_body(
+          columns = "Term")
+      ) |>
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c("Term", 'Sum of Square', df, 'F', P),
+      rows = P <= 0.05)
+    )|>
+  tab_options(
+  table.font.size = 12,
+  data_row.padding = gt::px(1)
+  )
+
+```
+
+```{r}
+knitr::knit_exit()
+```
+
 ### Multivariate analysis
 
 ```{r}
 #| label: fig-trait_pca
 #| echo: false
-#| eval: false
-#| fig-height: 10
+#| fig-height: 6
 #| fig-cap: Multivariate traits
 
-#tar_read(trait_pca_figure)
+tar_read(trait_pca_figure)
 
 ```
 
@@ -170,6 +319,223 @@ Species list at all the sites along the elevational gradient. The species are so
 #| echo: false
 #| tbl-cap: List of species at all three sites, sorted by cover and functional group.
 
-tar_read(species_list_out)
+tar_load(species_list_out)
 
+tab <- species_list_out
+
+tab %>% gtsave(filename = "Table_S2_species_list.png")
+
+```
+
+### PCA output
+
+```{r}
+#| label: tbl-pca
+#| echo: false
+#| eval: false
+#| tbl-cap: PCA output.
+
+tar_read(trait_pca)
+
+pca_out <- trait_pca[[4]] |> 
+  tidy() |> 
+  mutate(term = case_when(str_detect(term, "warming:Nitrogen_log") ~ "WxN",
+                            str_detect(term, "Nitrogen_log:origSiteID") ~ "NxO",
+                            str_detect(term, "warming:origSiteID") ~ "WxO",
+                            str_detect(term, "warming:grazing") ~ "WxG",
+                            str_detect(term, "origSiteID:grazing") ~ "GxO",
+                            str_detect(term, "origSiteID") ~ "O",
+                            str_detect(term, "Nitrogen_log") ~ "N",
+                            str_detect(term, "warming") ~ "W",
+                            str_detect(term, "grazing") ~ "G",
+                            TRUE ~ term),
+         SumOfSqs = round(SumOfSqs, 2),
+         R2 = round(R2, 2),
+         statistic = round(statistic, 2)) |> 
+  rename(Term = term, "Sum of squares" = SumOfSqs, Statistic = statistic, "P value" = p.value) |> 
+  gt()
+
+pca_out
+pca_out %>% gtsave(filename = "Table_SI1.png")
+
+```
+
+### ITV output
+
+```{r}
+#| label: tbl-itv-origin
+#| echo: false
+#| tbl-cap: Proportion contribution ITV, turnover, ....
+
+tar_load(variance_part)
+
+dat <- variance_part |>
+  select(origSiteID, figure_names, process, Term = term, pr = proportion, pv = pvalue) |>
+  mutate(origSiteID = recode(origSiteID, "Alpine" = "A", "Sub-alpine" = "S")) |> 
+  pivot_wider(names_from = c(origSiteID, process), values_from = c(pr, pv)) |> 
+  select(figure_names, Term, pr_S_total, pv_S_total, pr_S_turnover, pv_S_turnover, pr_S_intraspecific, pv_S_intraspecific, pr_S_covariation, pr_A_total, pv_A_total, pr_A_turnover, pv_A_turnover, pr_A_intraspecific, pv_A_intraspecific, pr_A_covariation) |> 
+  #select(trait_fancy, Term, pr_total, pv_total, pr_turnover, pv_turnover, pr_intraspecific, pv_intraspecific, pr_covariation) |> 
+  group_by(figure_names)
+
+
+tab <- dat |> 
+  gt() |> 
+  fmt_number(columns = everything(),
+  decimals = 3) |> 
+  text_transform(
+    locations = cells_row_groups(
+      groups = everything()
+    ),
+    fn = function(x){ 
+      map(x, \(y)
+      case_match(
+        y,
+        "Plant~height~(cm)" ~ html("Plant height (cm)"),
+        "Leaf~dry~mass~(g)" ~ html("Leaf dry mass (g)"),
+        "Leaf~area~(cm^2)" ~ html("Leaf area (cm<sup>2</sup>)"),
+        "Leaf~thickness~(mm)" ~ html("Leaf thickness (mm)"),
+        "SLA~(cm^2*g^{-1})" ~ html("SLA (cm<sup>2</sup>g<sup>-1</sup>)"),
+        "LDMC~(gg^{-1})" ~ html("LDMC (gg<sup>-1</sup>))"),
+        .default = html(y)
+      )
+      )
+    }
+  ) |> 
+  tab_spanner(
+    label = md("**Total**"),
+    columns = c(pr_S_total, pv_S_total)
+  ) |> 
+  tab_spanner(
+    label = md("**Turnover**"),
+    columns = c(pr_S_turnover, pv_S_turnover)
+  ) |> 
+  tab_spanner(
+    label = md("**ITV**"),
+    columns = c(pr_S_intraspecific, pv_S_intraspecific)
+  ) |> 
+  tab_spanner(
+    label = md("**Covariation**"),
+    columns = c(pr_S_covariation)
+  ) |> 
+    tab_spanner(label = md("**Sub-Alpine**"), 
+              columns = c(pr_S_total, pv_S_total, pr_S_turnover, pv_S_turnover, pr_S_intraspecific, pv_S_intraspecific, pr_S_covariation), 
+              level = 2) |> 
+  tab_spanner(
+    label = md("**Total.**"),
+    columns = c(pr_A_total, pv_A_total)
+  ) |> 
+  tab_spanner(
+    label = md("**Turnover.**"),
+    columns = c(pr_A_turnover, pv_A_turnover)
+  ) |> 
+  tab_spanner(
+    label = md("**ITV.**"),
+    columns = c(pr_A_intraspecific, pv_A_intraspecific)
+  ) |> 
+  tab_spanner(
+    label = md("**Covariation.**"),
+    columns = c(pr_A_covariation)
+  ) |> 
+    tab_spanner(label = md("**Alpine**"), 
+              columns = c(pr_A_total, pv_A_total, pr_A_turnover, pv_A_turnover, pr_A_intraspecific, pv_A_intraspecific, pr_A_covariation), 
+              level = 2) |> 
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(Term, pr_S_total, pv_S_total),
+      rows = pv_S_total <= 0.05)
+    ) |> 
+    tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(Term, pr_S_turnover, pv_S_turnover),
+      rows = pv_S_turnover <= 0.05)
+    ) |> 
+      tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(pr_S_intraspecific, pv_S_intraspecific),
+      rows = pv_S_intraspecific <= 0.05)
+    ) |> 
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(Term, pr_A_total, pv_A_total),
+      rows = pv_A_total <= 0.05)
+    ) |> 
+    tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(pr_A_turnover, pv_A_turnover),
+      rows = pv_A_turnover <= 0.05)
+    ) |> 
+      tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+      columns = c(pr_A_intraspecific, pv_A_intraspecific),
+      rows = pv_A_intraspecific <= 0.05)
+    ) |> 
+  cols_label(
+    Term = md("**Term**"),
+    pr_S_total = md("Prop"),
+    pv_S_total = md("*P*"),
+    pr_S_turnover = md("Prop"),
+    pv_S_turnover = md("*P*"),
+    pr_S_intraspecific = md("Prop"),
+    pv_S_intraspecific = md("*P*"),
+    pr_S_covariation = md("Prop"),
+    
+    pr_A_total = md("Prop"),
+    pv_A_total = md("*P*"),
+    pr_A_turnover = md("Prop"),
+    pv_A_turnover = md("*P*"),
+    pr_A_intraspecific = md("Prop"),
+    pv_A_intraspecific = md("*P*"),
+    pr_A_covariation = md("Prop")
+  ) |> 
+  tab_options(
+  table.font.size = 10,
+  data_row.padding = gt::px(1)
+  )
+
+```
+
+<!-- tab %>% gtsave(filename = "Table_2_itv_output.png") -->
+
+```{r}
+
+
+tab <- variance_part |>
+  filter(process %in% c("intraspecific", "turnover")) |>
+  select(origSiteID, figure_names, process, proportion) |> 
+    group_by(origSiteID, Traits = figure_names, Process = process) |>
+    summarise(proportion = sum(proportion)) |> 
+  pivot_wider(names_from = origSiteID, values_from = proportion) |> 
+  ungroup() |> 
+  gt() |> 
+  fmt_number(columns = everything(),
+  decimals = 2) |> 
+  cols_label(
+    Traits = md("**Traits**"),
+    Process = md("**Process**"),
+    Alpine = md("**Alpine**"),
+    'Sub-alpine' = md("**Sub-alpine**"),
+  ) |> 
+  tab_options(
+  table.font.size = 10,
+  data_row.padding = gt::px(1)
+  )
+#tab %>% gtsave(filename = "Table_3_itv_total.png")
 ```

@@ -45,38 +45,146 @@ make_trait_pca <- function(trait_mean){
     #        class = factor(class, levels = c("Size", "Leaf economics", "Isotopes", "Environment")))
 
   # permutation test
-  trait_mean <- g_trait_mean
+  #trait_mean <- g_trait_mean
   raw <- cwm_fat |> select(-(turfID:Nitrogen_log))
   # meta data
   meta <- cwm_fat|> select(turfID:Nitrogen_log) |>
     mutate(origSiteID = factor(origSiteID))
 
   # adonis test
-  if(meta %>% distinct(grazing) %>% count() == 2){
-    adonis_result <- adonis2(raw ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = meta, permutations = 999, method = "euclidean")
-  } else {
-    adonis_result <- adonis2(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = meta, permutations = 999, method = "euclidean")
-  }
+  adonis_result <- adonis2(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID + warming * grazing + grazing * origSiteID, data = meta, permutations = 999, method = "euclidean", by = "terms")
+
+  # if(meta %>% distinct(grazing) %>% count() == 2){
+  #   adonis_result <- adonis2(raw ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = meta, permutations = 999, method = "euclidean")
+  # } else {
+  #   adonis_result <- adonis2(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = meta, permutations = 999, method = "euclidean")
+  # }
 
   # rda
-  g.rda <- rda(raw ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = meta, scale = TRUE, center = TRUE)
-  anova(g.rda, permutations = 9999, by = "term")
+  rda_result <- rda(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID + warming * grazing + grazing * origSiteID, data = meta, scale = TRUE, center = TRUE)
+  #anova(rda, permutations = 9999, by = "term")
 
-  n.rda <- rda(raw ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID, data = meta)
-  RsquareAdj(n.rda)
-  anova(n.rda, permutations=9999, by = "term")
-  anova.cca(n.rda, step = 1000)
-  anova.cca(n.rda, step = 1000, by = "term")
+  # RsquareAdj(rda)
+  # anova(rda, permutations=9999, by = "term")
+  # anova.cca(rda, step = 1000)
+  # anova.cca(rda, step = 1000, by = "term")
 
-  outputList <- list(pca_sites, pca_traits, pca_output, adonis_result)
+  outputList <- list(pca_sites, pca_traits, pca_output, adonis_result, rda_result)
 
-  return(outputList)
 }
 
 # ordiplot(g.rda, scaling = 2, type = "text")
 # fortify(g.rda)
 
-make_pca_plot <- function(g_trait_pca, n_trait_pca, col2){
+
+make_pca_plot <- function(trait_pca, col2){
+
+  e_B1 <- eigenvals(trait_pca[[3]])/sum(eigenvals(trait_pca[[3]]))
+
+  trait_pca[[1]] |>
+    mutate(site_graze = paste(origSiteID, grazing, sep = "_"),
+           site_graze = case_match(site_graze,
+                                   "Alpine_Grazed" ~ "Alpine grazed",
+                                   "Alpine_Ungrazed" ~ "Alpine ungrazed",
+                                   "Sub-alpine_Grazed" ~ "Sub-alpine grazed",
+                                   "Sub-alpine_Ungrazed" ~ "Sub-alpine ungrazed",
+                                   .default = site_graze)) |>
+    ggplot(aes(x = PC1, y = PC2, colour = warming, linetype = origSiteID, fill = warming)) +
+    geom_convexhull(alpha = 0.2) +
+    geom_point(aes(shape = site_graze), size = 2) +
+    geom_segment(data = trait_pca[[2]],
+                 aes(x = 0, y = 0, xend = PC1, yend = PC2),
+                 arrow = arrow(length = unit(0.2, "cm")),
+                 inherit.aes = FALSE, colour = "grey60") +
+    geom_text(data = trait_pca[[2]] |>
+                mutate(figure_names = case_match(figure_names,
+                                                 "Plant~height~(cm)" ~ "Height~(cm)",
+                                                 "Leaf~dry~mass~(g)" ~ "Dry~mass~(g)",
+                                                 "Leaf~area~(cm^2)" ~ "Area~(cm^2)",
+                                                 "Leaf~thickness~(mm)" ~ "Thickness~(mm)",
+                                                 .default = figure_names),
+                       PC2 = case_when(label == "leaf_area_cm2_log" ~ -0.2,
+                                       label == "leaf~dry~mass~(g)" ~ -0.1,
+                                       label == "sla_cm2_g" ~ -1.1,
+                                       TRUE ~ PC2),
+                       PC1 = case_when(label == "leaf_thickness_mm_log" ~ 0.7,
+                                       TRUE ~ PC1)),
+              aes(x = PC1 + 0.3, y = PC2 + 0.2, label = figure_names),
+              size = 3,
+              inherit.aes = FALSE,
+              show.legend = FALSE, parse = TRUE) +
+    coord_equal() +
+    scale_fill_manual(name = "Warming", values = c("grey40", col2[2])) +
+    scale_colour_manual(name = "Warming", values = c("grey40", col2[2])) +
+    scale_shape_manual(name = "Origin and grazing", values = c(17, 2, 16, 1)) +
+    #scale_linetype_manual(name = "Origin and grazing", values = c("solid", "dashed", "solid", "dashed")) +
+    scale_linetype_manual(
+      "Origin", values = c("Alpine" = "solid", "Sub-alpine" = "dashed"),
+      guide = guide_legend(override.aes = list(colour = c("grey40", "grey40")))
+    ) +
+    labs(x = glue("PCA1 ({round(e_B1[1] * 100, 1)}%)"),
+         y = glue("PCA2 ({round(e_B1[2] * 100, 1)}%)")) +
+    theme_bw()
+
+}
+
+
+make_full_pca_plot <- function(trait_pca, col2){
+
+  e_B1 <- eigenvals(trait_pca[[3]])/sum(eigenvals(trait_pca[[3]]))
+
+  trait_pca[[1]] |>
+    mutate(site_graze = paste(origSiteID, grazing, sep = "_"),
+           site_graze = case_match(site_graze,
+                                   "Alpine_Grazed" ~ "Alpine grazed",
+                                   "Alpine_Ungrazed" ~ "Alpine ungrazed",
+                                   "Sub-alpine_Grazed" ~ "Sub-alpine grazed",
+                                   "Sub-alpine_Ungrazed" ~ "Sub-alpine ungrazed",
+                                   .default = site_graze)) |>
+    ggplot(aes(x = PC1, y = PC2, colour = warming, linetype = origSiteID, fill = warming)) +
+    geom_convexhull(alpha = 0.3) +
+    geom_point(aes(shape = site_graze, size = Namount_kg_ha_y)) +
+    geom_segment(data = trait_pca[[2]],
+                 aes(x = 0, y = 0, xend = PC1, yend = PC2),
+                 arrow = arrow(length = unit(0.2, "cm")),
+                 inherit.aes = FALSE, colour = "grey60") +
+    geom_text(data = trait_pca[[2]] |>
+                mutate(figure_names = case_match(figure_names,
+                                                 "Plant~height~(cm)" ~ "Height~(cm)",
+                                                 "Leaf~dry~mass~(g)" ~ "Dry~mass~(g)",
+                                                 "Leaf~area~(cm^2)" ~ "Area~(cm^2)",
+                                                 "Leaf~thickness~(mm)" ~ "Thickness~(mm)",
+                                                 .default = figure_names),
+                       PC2 = case_when(label == "leaf_area_cm2_log" ~ -0.2,
+                                       label == "leaf~dry~mass~(g)" ~ -0.1,
+                                       label == "sla_cm2_g" ~ -1.1,
+                                       TRUE ~ PC2),
+                       PC1 = case_when(label == "leaf_thickness_mm_log" ~ 0.7,
+                                       TRUE ~ PC1)),
+              aes(x = PC1 + 0.3, y = PC2 + 0.2, label = figure_names),
+              size = 3,
+              inherit.aes = FALSE,
+              show.legend = FALSE, parse = TRUE) +
+    coord_equal() +
+    guides(size = guide_legend(title = "Nitrogen addition")) +
+    scale_fill_manual(name = "Warming", values = c("grey40", col2[2])) +
+    scale_colour_manual(name = "Warming", values = c("grey40", col2[2])) +
+    scale_shape_manual(name = "Origin and grazing", values = c(17, 2, 16, 1)) +
+    scale_linetype_manual(
+      "Origin", values = c("Alpine" = "solid", "Sub-alpine" = "dashed"),
+      guide = guide_legend(override.aes = list(colour = c("grey40", "grey40")))
+    ) +
+    labs(x = glue("PCA1 ({round(e_B1[1] * 100, 1)}%)"),
+         y = glue("PCA2 ({round(e_B1[2] * 100, 1)}%)")) +
+    theme_bw()
+
+}
+
+
+
+
+
+make_pca_plot2 <- function(g_trait_pca, n_trait_pca, col2){
 
   trait_pca <- g_trait_pca
 
@@ -99,7 +207,7 @@ make_pca_plot <- function(g_trait_pca, n_trait_pca, col2){
          tag = "a)") +
     theme_bw()
 
- arrowsg1 <- trait_pca[[1]] %>%
+  arrowsg1 <- trait_pca[[1]] %>%
     ggplot(aes(x = PC1, y = PC2)) +
     geom_segment(data = trait_pca[[2]],
                  aes(x = 0, y = 0, xend = PC1, yend = PC2),

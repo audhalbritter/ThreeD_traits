@@ -145,10 +145,14 @@ si_plan <- list(
                                           species %in% c("Viola tricolor", "Antennaria dioica", "Pyrola norvegica", "Antennaria alpina") ~ "forb",
                                           species == "Salix herbacea" ~ "shrub",
                                           TRUE ~ functional_group),
-             functional_group = factor(functional_group, levels = c("graminoid", "forb", "legume", "shrub", "pteridophyte"))) |>
-      filter(!is.na(cover)) |>
+             functional_group = stringr::str_to_title(functional_group),
+             functional_group = factor(functional_group, levels = c("Graminoid", "Forb", "Legume", "Shrub", "Pteridophyte"))) |>
       mutate(cover = round(cover, 1)) |>
-      arrange(siteID, functional_group, -cover)
+      filter(!is.na(cover)) |>
+      pivot_wider(names_from = siteID, values_from = cover) |>
+      arrange(functional_group, species) |>
+      select("Functional Group" = functional_group, Species = species, Boreal, `Sub-alpine`, Alpine)
+
   ),
 
   tar_target(
@@ -161,7 +165,7 @@ si_plan <- list(
     ) |>
     cols_align(
       align = c("left"),
-      columns = functional_group
+      columns = "Functional Group"
     )
   )
 
