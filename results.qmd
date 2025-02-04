@@ -230,7 +230,7 @@ df |>
         y,
         "Leaf~thickness~(mm)" ~ html("Leaf thickness (mm)"),
         "SLA~(cm^2*g^{-1})" ~ html("SLA (cm<sup>2</sup>g<sup>-1</sup>)"),
-        "LDMC~(gg^{-1})" ~ html("LDMC (gg<sup>-1</sup>))"),
+        "LDMC~(gg^{-1})" ~ html("LDMC (gg<sup>-1</sup>)"),
         .default = html(y)
       )
       )
@@ -359,8 +359,6 @@ pca_out
 pca_out %>% gtsave(filename = "Table_SI1.png")
 
 ```
-
-
 
 ### ITV output
 
@@ -516,7 +514,6 @@ tab <- dat |>
 
 <!-- tab %>% gtsave(filename = "Table_2_itv_output.png") -->
 
-
 ```{r}
 
 
@@ -542,4 +539,3 @@ tab <- variance_part |>
   )
 #tab %>% gtsave(filename = "Table_3_itv_total.png")
 ```
-
