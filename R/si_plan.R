@@ -9,7 +9,7 @@ si_plan <- list(
     command = {
 
       # make correlation table of all traits
-      corr_table_g <- g_trait_mean %>%
+      corr_table_g <- trait_mean %>%
         fancy_trait_name_dictionary(.) |>
         ungroup() |>
         select(origSiteID:mean, trait_fancy, -trait_trans) |>
@@ -17,28 +17,11 @@ si_plan <- list(
         select(`Height cm`:`SLA cm2/g`) %>%
         cor(.)
 
-      g_plot <- ggcorrplot(corr_table_g,
+      ggcorrplot(corr_table_g,
                  lab = TRUE,
                  ggtheme = ggplot2::theme_bw(),
-                 colors = c("#6D9EC1", "white", "#E46726"),
-                 title = "Warming x grazing")
+                 colors = c("#6D9EC1", "white", "#E46726"))
 
-      # make correlation table of all traits
-      corr_table_n <- n_trait_mean %>%
-        fancy_trait_name_dictionary(.) |>
-        ungroup() |>
-        select(origSiteID:mean, trait_fancy, -trait_trans) |>
-        pivot_wider(names_from = trait_fancy, values_from = mean)  |>
-        select(`Height cm`:`SLA cm2/g`) %>%
-        cor(.)
-
-      n_plot <- ggcorrplot(corr_table_n,
-                 lab = TRUE,
-                 ggtheme = ggplot2::theme_bw(),
-                 colors = c("#6D9EC1", "white", "#E46726"),
-                 title = "Warming x nitrogen")
-
-      n_plot + g_plot + plot_layout(guides = "collect")
 
     }
   ),
@@ -56,7 +39,7 @@ si_plan <- list(
   #     # prob = 0.25 gives 75% of the plots
   #     # also run prob = 0.5 for 50% of the plots
   #     summarise(q = quantile(s, prob = 0.25))
-  #
+  
   # ),
 
   # trait imputation plot
@@ -73,44 +56,29 @@ si_plan <- list(
   ),
 
   tar_target(
-    name = imputation_plot_g,
+    name = imputation_plot,
     command = {
 
+      dd <- trait_impute %>% 
+        ungroup() |> 
+        distinct(origSiteID, origBlockID, turfID, warming, grazing) |> 
+        arrange(origSiteID, origBlockID, turfID) |> 
+        mutate(ID = paste0(origSiteID, "_ ", origBlockID, "_", turfID),
+               ID2 = paste0(origSiteID, "-", substr(warming, 1,1), "-", substr(grazing, 1,1))) |> 
+        select(ID, ID2)
+
+      # print list of treatments
+      #cat(paste0('c("', paste(dd$ID2, collapse = '", "'), '")'))
+
       #check trait coverage
-      wg_trait_impute %>%
+      trait_impute %>% 
         autoplot(., other_col_how = "ignore") +
         scale_fill_manual(labels = c("turfID", "blockID", "siteID", "global"),
                           values = c("#56B4E9", "#009E73", "#E69F00", "#D55E00")) +
         scale_y_continuous(breaks = c(0, 0.5, 1)) +
-        # scale_x_discrete(breaks = c("B_1_D", "B_2_D", "B_3_D", "B_4_D", "B_5_D", "C_1_D", "C_2_D", "C_3_D", "C_4_D", "C_5_D", "C_6_D", "C_7_D"),
-        #                  labels = c("1", "2", "3", "4", "5", "1", "2", "3", "4", "5", "6", "7")) +
+        # scale_x_discrete(breaks = c("Alpine_ 1_3 WN1C 85", "Alpine_ 1_4 AN1C 4", "Alpine_ 1_7 AN1N 7", "Alpine_ 1_8 WN1N 87", "Alpine_ 4_27 AN3C 27", "Alpine_ 4_29 WN3C 106", "Alpine_ 4_31 AN3N 31", "Alpine_ 4_32 WN3N 112", "Alpine_ 10_74 WN2C 155", "Alpine_ 10_77 AN2C 77", "Alpine_ 10_79 AN2N 79", "Alpine_ 10_80 WN2N 159", "Sub-alpine_ 1_81 AN1C 81", "Sub-alpine_ 1_85 WN1C 162", "Sub-alpine_ 1_87 WN1N 164", "Sub-alpine_ 1_88 AN1N 88", "Sub-alpine_ 4_105 WN3C 173", "Sub-alpine_ 4_109 AN3C 109", "Sub-alpine_ 4_111 AN3N 111", "Sub-alpine_ 4_112 WN3N 176", "Sub-alpine_ 10_156 AN2C 156", "Sub-alpine_ 10_158 WN2C 199", "Sub-alpine_ 10_159 WN2N 200", "Sub-alpine_ 10_160 AN2N 160"),
+        #                  labels = c("Alpine-W-0-U", "Alpine-A-0-U", "Alpine-A-0-G", "Alpine-W-0-G", "Alpine-A-0-U", "Alpine-W-0-U", "Alpine-A-0-G", "Alpine-W-0-G", "Alpine-W-0-U", "Alpine-A-0-U", "Alpine-A-0-G", "Alpine-W-0-G", "Sub-alpine-A-0-U", "Sub-alpine-W-0-U", "Sub-alpine-W-0-G", "Sub-alpine-A-0-G", "Sub-alpine-W-0-U", "Sub-alpine-A-0-U", "Sub-alpine-A-0-G", "Sub-alpine-W-0-G", "Sub-alpine-A-0-U", "Sub-alpine-W-0-U", "Sub-alpine-W-0-G", "Sub-alpine-A-0-G")) +
 
-        facet_wrap(~ trait_trans, labeller = labeller(trait_trans = trait_names)) +
-        labs(x = "Treatments") +
-        theme_minimal() +
-        theme(axis.text.x = element_text(angle = 90))
-
-    }
-  ),
-
-  tar_target(
-    name = imputation_plot_n,
-    command = {
-
-      ids <- wn_trait_impute %>%
-        mutate(id = paste(origSiteID, origBlockID, turfID, sep = "_"),
-               name = paste(origSiteID, warming, Namount_kg_ha_y, grazing, sep = "_")) |>
-        ungroup() |>
-        arrange(origSiteID) |>
-        distinct(id)
-
-      #check trait coverage
-      wn_trait_impute %>%
-        autoplot(., other_col_how = "ignore") +
-        scale_fill_manual(labels = c("turfID", "blockID", "siteID", "global"),
-                          values = c("#56B4E9", "#009E73", "#E69F00", "#D55E00")) +
-        scale_y_continuous(breaks = c(0, 0.5, 1)) +
-        #scale_x_discrete(labels = c("A W0C" = "Alpine_1_3 WN1C 85")) +
         facet_wrap(~ trait_trans, labeller = labeller(trait_trans = trait_names)) +
         labs(x = "Treatments") +
         theme_minimal() +
@@ -167,6 +135,26 @@ si_plan <- list(
       align = c("left"),
       columns = "Functional Group"
     )
+  ),
+
+  # climate figure
+  tar_target(
+    name = climate_figure,
+    command = daily_temp |>
+      mutate(month = month(date),
+             year = year(date)) |>
+      filter(month %in% c(5, 6, 7, 8, 9),
+             year %in% c(2020, 2021, 2022),
+             # only controls
+             Nlevel %in% c(1, 2, 3),
+             grazing == "Control") %>%
+      ggplot(aes(x = as.factor(year), y = value, fill = warming)) +
+      geom_violin(draw_quantiles = 0.5) +
+      scale_fill_manual(name = "", values = c("grey40", warming_palette[2])) +
+      labs(x = "Year",
+           y = "Soil moisture (propotion) - Temperature (°C)") +
+      facet_grid(variable ~ origSiteID, scales = "free_y") +
+      theme_bw()
   )
 
 )

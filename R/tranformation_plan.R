@@ -58,76 +58,39 @@ tranformation_plan <- list(
   ),
 
 
-  # BOOTSTRAPPING
-  # make trait impute
-  # warming x grazing data
-  tar_target(
-    name = wg_trait_impute,
-    command = make_trait_impute(community |>
-                                  filter(Namount_kg_ha_y == 0),
-                                traits |>
-                                  filter(Namount_kg_ha_y == 0))
+  ### TRAIT IMPUTSTION AND BOOTSTRAPPING
 
+  # trait impute
+  tar_target(
+    name = trait_impute,
+    command = make_trait_impute(community, traits)
   ),
 
-  # warming x grazing data without ITV
+  # trait imputation coverage
   tar_target(
-    name = wg_trait_null_impute,
-    command = make_trait_null_impute(community |>
-                                  filter(Namount_kg_ha_y == 0),
-                                traits |>
-                                  filter(Namount_kg_ha_y == 0))
-
+    name = trait_coverage,
+    command = fortify_filled_trait(trait_impute) |>
+      ungroup() |>
+      #filter(Trait == "CN_ratio") |>
+      complete(.id, level, trait_trans, fill = list(s = 0)) |>
+      filter(level == "turfID") |>
+      group_by(trait_trans) |>
+      # prob = 0.25 gives 75% of the plots
+      # also run prob = 0.5 for 50% of the plots
+      summarise(q = quantile(s, prob = 0.25))
   ),
 
-  # warming x N
+  # trait impute noitv
   tar_target(
-    name = wn_trait_impute,
-    command = make_trait_impute(community |>
-                                  filter(grazing == "Ungrazed"),
-                                traits |>
-                                  filter(grazing == "Ungrazed"))
-
+    name = trait_null_impute,
+    command = make_trait_null_impute(community, traits)
   ),
 
-  # warming x N witout ITV
+  # bootstrapping
   tar_target(
-    name = wn_trait_null_impute,
-    command = make_trait_null_impute(community |>
-                                  filter(grazing == "Ungrazed"),
-                                traits |>
-                                  filter(grazing == "Ungrazed"))
-
-  ),
-
-  # bootstrap and summarise
-  # tar_target(
-  #   name = g_trait_mean,
-  #   command = make_bootstrapping(wg_trait_impute)
-  # ),
-
-  tar_target(
-    name = g_trait_mean,
-    command = make_bootstrapping(wg_trait_impute, wg_trait_null_impute)
-  ),
-
-  # tar_target(
-  #   name = n_trait_mean,
-  #   command = make_bootstrapping(wn_trait_impute)
-  # ),
-
-  tar_target(
-    name = n_trait_mean,
-    command = make_bootstrapping(wn_trait_impute, wn_trait_null_impute)
+    name = trait_mean,
+    command = make_bootstrapping(trait_impute, trait_null_impute)
   )
 
-  # multivariate functional diversity
-  # tar_target(
-  #   name = multivariate_traits,
-  #   command = make_multi_trait_impute(community |>
-  #                                       filter(Namount_kg_ha_y == 0),
-  #                                     traits |>
-  #                                       filter(Namount_kg_ha_y == 0))
-  # )
 
 )

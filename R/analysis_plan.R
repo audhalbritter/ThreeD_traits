@@ -10,126 +10,52 @@ analysis_plan <- list(
                 se_aspect = sd(aspect)/sqrt(n()),
                 aspect = mean(aspect))
   ),
+  
 
-  # SINGLE TRAIT ANALYIS
+  ### Run trait model
 
-  # trait analysis (warming and grazing)
+  # run full model
   tar_target(
-    name = g_trait_models,
-    command = g_trait_mean |>
+    name = full_models,
+    command = trait_mean |>
       group_by(trait_trans, figure_names) |>
       nest() |>
-      mutate(model = map(data, ~lm(mean ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = .)),
-             result = map(model, tidy),
-             anova = map(model, car::Anova),
-             anova_tidy = map(anova, tidy),
-             prediction = map(model, augment, interval = "confidence"),
+      mutate(model_log = map(data, ~lm(mean ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID + warming * grazing + grazing * origSiteID, data = .)),
+             model_lognoITV = map(data, ~lm(mean_noitv ~ warming * Nitrogen_log + warming * origSiteID + Nitrogen_log * origSiteID + warming * grazing + grazing * origSiteID, data = .)),
 
-             model_noITV = map(data, ~lm(mean_noitv ~ warming * grazing + warming * origSiteID + grazing * origSiteID, data = .)),
-             result_noITV = map(model_noITV, tidy),
-             anova_noITV = map(model_noITV, car::Anova),
-             anova_tidy_noITV = map(anova_noITV, tidy),
-             prediction_noITV = map(model_noITV, augment, interval = "confidence"))
+             glance_log = map(.x = model_log, .f = ~ safely(glance)(.x)$result),
+             glance_lognoITV = map(.x = model_lognoITV, .f = ~ safely(glance)(.x)$result)) |>
+      # make long table
+      pivot_longer(cols = -c(trait_trans, figure_names, data),
+                   names_sep = "_",
+                   names_to = c(".value", "names")) |>
+      #unnest(AIC)
+      unnest(glance) |>
+      select(trait_trans:adj.r.squared, AIC, deviance)
   ),
 
+  # make prediction
   tar_target(
-    name = g_trait_anova,
-    command = bind_rows(
-      ITV = g_trait_models |>
-        unnest(anova_tidy) |>
-        select(figure_names, term:p.value),
-      Turnover = g_trait_models |>
-        unnest(anova_tidy_noITV) |>
-        select(figure_names, term:p.value),
-      .id = "process") |>
-      mutate(term = case_when(str_detect(term, "warming:origSiteID") ~ "WxO",
-                              str_detect(term, "warming:grazing") ~ "WxG",
-                              str_detect(term, "grazing:origSiteID") ~ "GxO",
-                              str_detect(term, "grazing") ~ "G",
-                              str_detect(term, "warming") ~ "W",
-                              str_detect(term, "origSiteID") ~ "O",
-                              TRUE ~ term))
+    name = trait_prediction,
+    command = make_prediction_full(full_models |>
+                                     filter(names == "log"))
   ),
 
-# trait analysis (warming and nitrogen)
-tar_target(
-  name = all_n_trait_models,
-  command = run_all_models(n_trait_mean)
-),
-
-  # only log model
+  # merge data and make prediction
   tar_target(
-    name = n_trait_model,
-    command = all_n_trait_models |>
-      # select log model
-      filter(names %in% c("log", "lognoITV")) |>
-      mutate(process = if_else(names == "log", "ITV", "Turnover"))
+    name = trait_output,
+    command = trait_prediction |>
+      # merge data and prediction
+      mutate(output = map2(.x = newdata, .y = prediction, ~ bind_cols(.x, .y))) |>
+      select(trait_trans, figure_names, names, output) |>
+      unnest(output) |>
+      rename(prediction = fit) |>
+      mutate(prediction = if_else(trait_trans %in% c("sla_cm2_g", "ldmc"), prediction, exp(prediction)),
+             lwr = if_else(trait_trans %in% c("sla_cm2_g", "ldmc"), lwr, exp(lwr)),
+             upr = if_else(trait_trans %in% c("sla_cm2_g", "ldmc"), upr, exp(upr)))
   ),
 
-  # make prediction for nitrogen model
-  tar_target(
-    name = n_trait_output,
-    command = make_prediction(n_trait_model)
-  ),
 
-  # results
-  tar_target(
-    name = n_trait_anova,
-    command = n_trait_output |>
-      ungroup() |>
-      select(process, figure_names, anova_tidy) |>
-      unnest(anova_tidy) |>
-      mutate(term = case_when(str_detect(term, "warming:Nitrogen_log") ~ "WxN",
-                              str_detect(term, "Nitrogen_log:origSiteID") ~ "NxO",
-                              str_detect(term, "warming:origSiteID") ~ "WxO",
-                              str_detect(term, "origSiteID") ~ "O",
-                              str_detect(term, "Nitrogen_log") ~ "N",
-                              str_detect(term, "warming") ~ "W",
-
-                              TRUE ~ term))
-
-  ),
-
-  tar_target(
-    name = trait_result,
-    command = n_trait_output |>
-      ungroup() |>
-      unnest(result) |>
-      select(process, figure_names, names, term:p.value)
-  ),
-
-  tar_target(
-    name = trait_anovas,
-    command = {
-      n <- n_trait_anova |>
-        filter(process == "ITV") |>
-        mutate(sumsq = round(sumsq, 2),
-               df = round(df, 2),
-               statistic = round(statistic, 2),
-               p.value = round(p.value, 3)) |>
-        rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value")
-
-      g <- g_trait_anova |>
-
-        filter(process == "ITV") |>
-        ungroup() |>
-        select(-trait_trans) |>
-        mutate(sumsq = round(sumsq, 2),
-               df = round(df, 2),
-               statistic = round(statistic, 2),
-               p.value = round(p.value, 3)) |>
-        rename(Traits = figure_names, Term = term, "Sum of Square" = sumsq, "F" = statistic, "P" = "p.value")
-
-      bind_cols(n,
-                g |>
-                  select(Term_g = Term, `Sum of Square_g` = `Sum of Square`, df_g = df, F_g = 'F', P_g = P)) |>
-        ungroup() |>
-        select(-process) |>
-        arrange(Traits)
-
-    }
-
-  ),
 
   ### ITV analysis
 
@@ -141,7 +67,7 @@ tar_target(
 tar_target(
   name = variance_part,
   command = make_ITV_proportions_origin(itv_output)
-)
+),
 
 
 
@@ -150,15 +76,13 @@ tar_target(
   #            path = "R/model_checking.qmd", quiet = FALSE)
 
 
+
   # MULTIVARIATE TRATI ANALYSIS
 
-  # tar_target(
-  #   name = trait_pca,
-  #   command = make_trait_pca(trait_mean)
-  # )
+  tar_target(
+    name = trait_pca,
+    command = make_trait_pca(trait_mean)
+  )
 
-#   tar_target(
-#     name = n_trait_pca,
-#     command = make_trait_pca(n_trait_mean)
-#   )
+
  )

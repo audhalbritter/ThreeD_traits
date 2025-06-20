@@ -12,7 +12,6 @@ combined_plan <- c(
   tranformation_plan,
   analysis_plan,
   figure_plan,
-  new_plan,
   #manuscript_plan
   si_plan
   #si_figure_plan
