@@ -3,7 +3,6 @@ title: "Trait responses to global change"
 format: 
   html:
     self-contained: true
-editor: visual
 execute:
   warnings: false
   messages: false
@@ -33,84 +32,22 @@ library(broom)
 #| label: fig-nitrogen
 #| echo: false
 #| warning: false
-#| fig-height: 6
-#| fig-cap: Plant community functional trait responses to warming and nitrogen addition. Bootstrapped trait means increasing nitrogen addition (log-transformed) under ambient (grey) and warm (pink) climate originating from alpine (triangle, solid line) and subalpine (circle, dashed line) sites. The points show the raw data and the lines, the predictions and confidence intervals from the model. The letters in the bottom right corner indicate significant effects of W = warming, N = nitrogen addition, and O = origin community, with WxO and NxO representing their interaction. 
+#| fig-height: 4
+#| fig-cap: Plant community functional traits, namely plant height (cm), leaf dry mass (g), and leaf area (cm2), that respond to warming, nitrogen addition and origin of the plant community. Panels show bootstrapped trait means with increasing nitrogen addition (log-transformed x axis with the numbers on the original scale for ease of interpretation) under ambient (grey) and warm (pink) climate originating from alpine (triangle, solid line) and sub-alpine (circle, dashed line) sites. Points show the raw data and lines show predictions with confidence intervals from the model. The traits were log-transformed before the analysis, and back-transformed to the original scale for visualization. Letters in the bottom right corners indicate significant effects of W = warming, N = nitrogen addition, and O = origin community, with WxO and NxO representing their interaction.
 
-tar_read(nitrogen_figure)
+tar_read(trait_WN_figure)
 ```
 
 ```{r}
 #| label: fig-grazing
 #| echo: false
 #| warning: false
-#| fig-height: 6
-#| fig-cap: Plant community functional trait responses to warming and grazing. Bootstrapped trait means under a) ambient (grey) and warm climate (pink), b) grazed (blue) and ungrazed (orange) conditions, originating from subalpine and alpine sites. The points show the raw data and the lines, the predictions and confidence intervals from the model. The letters in the bottom right corner indicate significant effects of W = warming, G = grazing, and O = origin community, with WxO and GxO representing their interaction. 
+#| fig-height: 7
+#| fig-cap: Plant community functional trait responses to a) warming and b) grazing. Panels show bootstrapped trait means for leaf thickness (mm), specific leaf area (SLA; cm2g-1), and leaf dry matter content (LDMC; gg-1) under ambient (grey) and warm climate (pink), or grazed (light green) and ungrazed (dark green) conditions, originating from alpine and sub-alpine sites. The horizontal line shows the median. Leaf thickness was log-transformed before the analysis, and back-transformed to the original scale for visualization. Letters in the bottom right corners indicate significant effects of W = warming, G = grazing, and O = origin community, with WxO and GxO representing their interaction.  
 
-tar_read(grazing_figure)
+tar_read(trait_WG_figure)
 ```
 
-```{r}
-#| label: tbl-single-traits
-#| echo: false
-#| eval: false
-#| tbl-cap: The main and interactive linear model effects for the warming by nitrogen and warming by grazing models. Each model included effects for warming (W), origin (O), model-specific drivers—nitrogen (N) and grazing (G)—and an interaction term for pair-wise interactions. Significant effects (p < 0.05) are bolded.
-
-tar_load(trait_anovas)
-
-df <- trait_anovas |> 
-    mutate(Traits = case_when(Traits == "Plant~height~(cm)" ~ "Plant height (cm)",
-                              Traits == "Leaf~dry~mass~(g)" ~ "Leaf dry mass (cm)",
-                              Traits == "Leaf~area~(cm^2)" ~ "Leaf area (cm<sup>2</sup>)",
-                              Traits == "Leaf~thickness~(mm)" ~ "Leaf thickness (mm)",
-                              Traits == "SLA~(cm^2*g^{-1})" ~ "SLA (cm<sup>2</sup>g<sup>-1</sup>)",
-                              TRUE ~ Traits),
-           Traits = purrr::map(Traits, gt::html)) |> 
-  group_by(Traits) |> 
-  gt() |> 
-  tab_spanner(
-      label = md('Warming x nitrogen'),
-      columns = c('Term', 'Sum of Square', 'df', 'F', 'P')
-    ) |> 
-  tab_spanner(
-      label = md('Warming x grazing'),
-      columns = c('Term_g', 'Sum of Square_g', 'df_g', 'F_g', 'P_g')
-    ) |> 
-  tab_style(
-        style = cell_borders(sides = "left", color = "white", weight = px(15), style = "solid"),
-        locations = cells_body(
-          columns = "Term_g")
-      ) |> 
-  tab_style(
-    style = list(
-      cell_text(weight = "bold")
-      ),
-    locations = cells_body(
-      columns = c("Term", 'Sum of Square', df, 'F', P),
-      rows = P <= 0.05)
-    )|> 
-  tab_style(
-    style = list(
-      cell_text(weight = "bold")
-      ),
-    locations = cells_body(
-      columns = c("Term_g", 'Sum of Square_g', df_g, F_g, P_g),
-      rows = P_g <= 0.05)
-    )|> 
-  cols_label(
-    Term_g = "Term",
-    'Sum of Square_g' = "Sum of Square",
-    df_g = "df",
-    F_g = "F",
-    P_g = "P"
-  ) |> 
-  tab_options(
-  table.font.size = 10,
-  data_row.padding = gt::px(1)
-  )
-
-df
-#df %>% gtsave(filename = "Table_1.png")
-```
 
 ```{r}
 #| label: single-traits_stats
@@ -257,7 +194,7 @@ df |>
 ```
 
 ```{r}
-knitr::knit_exit()
+#knitr::knit_exit()
 ```
 
 ### Multivariate analysis
@@ -266,11 +203,27 @@ knitr::knit_exit()
 #| label: fig-trait_pca
 #| echo: false
 #| fig-height: 6
-#| fig-cap: Multivariate traits
+#| fig-cap: Multivariate community-weighted mean trait responses to warming, grazing and origin of the plant communities, determined by a principal component analysis (PCA). The plant community originating from the alpine (triangle) and sub-alpine (circle) sites are represented by shape, the filling of the symbols indicates grazed (filled) and ungrazed (open) plots and the colour ambient (grey) and warming (red) treatment. Traits include plant height (Height; cm), dry mass (g), leaf area (Area; cm2), leaf thickness (Thickness; mm), specific leaf area (SLA; cm2g-1), and leaf dry matter content (LDMC; gg-1). This PCA was conducted on the whole dataset, however for clarity only the significant treatments are visualised (the interaction of warming and origin community, and grazing and origin community). The full PCA with all treatments is in Appendix S4.
+
 
 tar_read(trait_pca_figure)
 
 ```
+
+
+### ITV analysis
+
+```{r}
+#| label: fig-itv
+#| echo: false
+#| fig-height: 7
+#| fig-cap: Variance partitioning results for each trait and separately for alpine and sub-alpine sites including a) total variance and b) between warming, grazing, nitrogen, their interaction, and residual variation. Bar colours indicate proportions of variation attributed to intraspecific variation (blue) or interspecific (species turnover; yellow). Black dots indicate the total variation explained by each factor (W = warming, N = nitrogen addition, G = grazing, and O = origin community, with WxN and WxG representing their interaction). To partition the effect of species turnover from intraspecific variation in explaining differences between warming, grazing or nitrogen, and residual variation, we used the decomposition of Sums of Squares approach by Lepš et al., (2011). Thus, differences in mean trait values between warming, grazing or nitrogen can be attributed to species turnover or intraspecific trait variation. The total variation can be greater than the sum of the two sources of variation if there is positive covariation between the sources of variation. Likewise, negative covariation between the sources of variation results in less total variation than the sum of the two sources of variation.
+
+
+tar_read(itv_figure)
+
+```
+
 
 ## Supporting Information
 
@@ -292,23 +245,15 @@ tar_read(trait_correlation_plot)
 The trait correlation is high between the size traits (area, height and dry mass).
 
 ```{r}
-#| label: trait-n-imputation
+#| label: trait-imputation
 #| echo: false
 #| fig-width: 8
 #| fig-cap: The proportions of the level traits were imputed for the warming x nitrogen model; plot (blue), block (green), site (orange) or global (red).
 
-tar_read(imputation_plot_n)
+tar_read(imputation_plot)
 
 ```
 
-```{r}
-#| label: trait-g-imputation
-#| echo: false
-#| fig-cap: The proportions of the level traits were imputed for the warming x grazing model; plot (blue), block (green), site (orange) or global (red).
-
-tar_read(imputation_plot_g)
-
-```
 
 ### Species list
 
@@ -317,13 +262,16 @@ Species list at all the sites along the elevational gradient. The species are so
 ```{r}
 #| label: tbl-sp-list
 #| echo: false
-#| tbl-cap: List of species at all three sites, sorted by cover and functional group.
+#| fig-height: 10
+#| tbl-cap: Estimated cover for each species at all three sites. The data is sorted by functional group and species and shows the cover for the boreal, sub-alpine, and alpine sites.
 
 tar_load(species_list_out)
 
 tab <- species_list_out
 
-tab %>% gtsave(filename = "Table_S2_species_list.png")
+tab
+
+#tab %>% gtsave(filename = "Table_S2_species_list.png")
 
 ```
 
@@ -333,7 +281,7 @@ tab %>% gtsave(filename = "Table_S2_species_list.png")
 #| label: tbl-pca
 #| echo: false
 #| eval: false
-#| tbl-cap: PCA output.
+#| tbl-cap: PCA Output from the Permanova for testing global change impacts on multivariate trait space. The table shows the effect of warming (W), nitrogen addition (N), grazing (G) and origin (O) as well as their interactions (e.g. WxN), degrees of freedom (df), sum of squares, R2, statistics and P value. Significant effects are shown in bold.
 
 tar_read(trait_pca)
 
@@ -353,10 +301,29 @@ pca_out <- trait_pca[[4]] |>
          R2 = round(R2, 2),
          statistic = round(statistic, 2)) |> 
   rename(Term = term, "Sum of squares" = SumOfSqs, Statistic = statistic, "P value" = p.value) |> 
-  gt()
+  gt() |>
+# make significant rows bold
+tab_style(
+    style = list(
+      cell_text(weight = "bold")
+    ),
+    locations = cells_body(
+      rows = `P value` <= 0.05
+    )
+  )
 
 pca_out
-pca_out %>% gtsave(filename = "Table_SI1.png")
+#pca_out %>% gtsave(filename = "Table_SI1.png")
+
+```
+
+
+```{r}
+#| label: fig-trait-pca-full
+#| echo: false
+#| fig-height: 6
+#| fig-cap: Multivariate community-weighted mean trait responses to warming, nitrogen addition, grazing and origin site of plant communities, determined by a principal component analysis (PCA). Communities originate from the alpine (triangle) and sub-alpine (circle) sites are represented by shape, the filling of the symbols indicates grazed (filled) and ungrazed (open) plots and the colour ambient (grey) and warming (red) treatment. Traits include plant height (cm), dry mass (g), leaf area (cm2), leaf thickness (mm), specific leaf area (SLA; cm2g-1), and leaf dry matter content (LDMC; gg-1).
+tar_read(full_trait_pca_figure)
 
 ```
 
@@ -365,7 +332,7 @@ pca_out %>% gtsave(filename = "Table_SI1.png")
 ```{r}
 #| label: tbl-itv-origin
 #| echo: false
-#| tbl-cap: Proportion contribution ITV, turnover, ....
+#| tbl-cap: Decomposition of the trait sum of squares into total trait variation, species turnover, intraspecific trait variation (ITV), and their covariation. Shown are the proportion of variation (Prop) and the P value for each trait and decomposed by warming (W), nitrogen addition (N), grazing (G), and their interactions (WxN, WxG). Significant effects are shown in bold.
 
 tar_load(variance_part)
 
@@ -510,12 +477,17 @@ tab <- dat |>
   data_row.padding = gt::px(1)
   )
 
+tab
+
 ```
 
 <!-- tab %>% gtsave(filename = "Table_2_itv_output.png") -->
 
 ```{r}
-
+#| label: tbl-itv-origin2
+#| echo: false
+#| message: false
+#| tbl-cap: Proportion of variance explained by ITV and species turnover for the different traits in the alpine and sub-alpine site.
 
 tab <- variance_part |>
   filter(process %in% c("intraspecific", "turnover")) |>
@@ -537,5 +509,8 @@ tab <- variance_part |>
   table.font.size = 10,
   data_row.padding = gt::px(1)
   )
+
+  tab
+
 #tab %>% gtsave(filename = "Table_3_itv_total.png")
 ```
