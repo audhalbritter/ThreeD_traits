@@ -92,8 +92,8 @@ figure_plan <- list(
                   aes(x = x_var, y = y_var, hjust = hjust_var, vjust = vjust_var, label = term),
                   size = 3, colour = "black") +
         # change labels to real values
-        scale_x_continuous(breaks = c(log(1), log(5), log(25), log(150)), 
-                           labels = c(1, 5, 25, 150) 
+        scale_x_continuous(breaks = c(0, 1.79, 2.4, 3.93, 5.02), 
+                           labels = c(0, 5, 10, 50, 150) 
                           #limits = c(log(1), log(230))
                           ) +
         # add some space at the top
