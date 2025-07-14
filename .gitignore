@@ -64,3 +64,5 @@ vignettes/*.pdf
 *.md
 *.lua
 *.tex
+
+*.json
